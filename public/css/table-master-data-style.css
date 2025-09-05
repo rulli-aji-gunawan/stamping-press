@@ -1,0 +1,195 @@
+/* Google Fonts  */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+/* Globals  */
+* {
+    font-family: 'Poppins', sans-serif;
+    font-size: .8rem;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    list-style: none;
+    text-decoration: none;
+}
+
+/* Variables  */
+:root {
+    --color_Blue: #3f93f1;
+    --color_LightBlue: #e5f1ff;
+    --color_Dark1: #1e1e1e;
+    --color_Dark2: #252527;
+    --color_DarkGrey: #636363;
+    --color_Light1: #dfdfdf;
+    --color_Light2: #c4c4c4;
+    --color_Light3: #fdfdfd;
+    --color_Green1: #1c6d3f;
+    --color_Green2: #449d6b;
+    --color_Green3: #f2f8f4;
+    --color_DarkGreen: darkgreen;
+    --color_LightYellow1: #f9f9cc;
+    --color_Orange1: #fe6a50;
+    --color_LightRed: #e24a64;
+}
+
+.container {
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    margin-top: 28px;
+    background-color: inherit;
+    justify-content: space-between;
+    align-items: start;
+    padding: 20px 40px 20px 40px;
+    gap: 12px;
+    width: 100%;
+    border: 1px solid var(--color_Green1); 
+}
+
+.filter-table {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    padding: 4px, 5px;
+    gap: 15px;
+    /* border: solid 1px var(--color_Light1); */
+}
+
+.filter-table #reset-filters {
+    display: flex;
+    font-size: 1.0rem;
+    color: var(--color_LightRed);
+    cursor: pointer;
+    white-space: nowrap;
+}
+
+.filter-table #reset-filters:hover {
+    color: var(--color_Dark1);
+}
+
+
+#btn-addUser:hover,
+#btn-editUser:hover,
+#btn-delUser:hover,
+#btn-editMasterData:hover,
+#btn-delMasterData:hover,
+#btn-addMasterData:hover {
+    cursor: pointer;
+    background: var(--color_Dark2);
+}
+
+#btn-addMasterData {
+    min-width: 50px;
+    padding: 2px 6px 2px 6px;
+    border-radius: 5px;
+    border: 1px solid var(--color_Light2);
+    background: var(--color_Green1);
+    color: var(--color_Light3);
+    font-weight: 400;
+    font-size: 0.8rem;
+    height: 24px;
+    cursor: pointer;
+}
+
+#btn-editMasterData {
+    width: 40px;
+    /* padding: 2px 5px 2px 5px; */
+    justify-content: center;
+    border-radius: 5px;
+    border: 1px solid var(--color_Light2);
+    background: var(--color_Blue);
+    border: none;
+    color: #fff;
+    height: 16px;
+    font-size: 0.8rem;
+}
+
+#btn-delMasterData {
+    width: 62px;
+    /* padding: 2px 5px 2px 5px; */
+    justify-content: center;
+    border-radius: 5px;
+    border: 1px solid var(--color_Light2);
+    border: none;
+    background: var(--color_LightRed);
+    color: #fff;
+    height: 16px;
+    font-size: 0.8rem;
+}
+
+.tbl-master-data {
+    /* width: 80%; */
+    border-collapse: collapse;
+    margin-top: 0px;
+    opacity: 1;
+    transition: opacity 0.5s ease;
+}
+
+#userModal {
+    /* width: 80%; */
+    border-collapse: collapse;
+    margin-top: 100px;
+    margin-left: 150px;
+    opacity: 1;
+    transition: opacity 0.5s ease;
+}
+
+.tbl-master-data th,
+.tbl-master-data td {
+    height: 100%;
+    border: 0.1px solid var(--color_Light1);
+    vertical-align: top;
+}
+
+.tbl-master-data th #tbl-user-head-no {
+    width: 48px;
+}
+
+.tbl-master-data th #tbl-user-head-name {
+    width: 168px;
+}
+
+.tbl-master-data th #tbl-user-head-email {
+    width: 198px;
+}
+
+.tbl-master-data th #tbl-user-head-admin {
+    width: 98px;
+}
+
+.tbl-master-data th #tbl-user-head-time {
+    width: 156px;
+}
+
+.tbl-master-data th #tbl-user-head-action {
+    width: 86px;
+}
+
+.tbl-master-data th p {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 22px;
+    background: var(--color_DarkGrey);
+    border: none;
+    color: #fff;
+    padding: 8px;
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+.tbl-master-data td p {
+    display: flex;
+    align-items: center;
+    height: 20px;
+    color: var(--color_Green1);
+    padding: 8px;
+    gap: 5px;
+    font-size: 0.8rem;
+    font-weight: 200;
+}
+
+.tbl-master-data tr:nth-child(even) td {
+    background: var(--color_Green3);
+}

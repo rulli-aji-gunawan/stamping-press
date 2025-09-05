@@ -1,0 +1,100 @@
+/* Variables  */
+:root {
+    --color_Blue: #3f93f1;
+    --color_LightBlue: #e5f1ff;
+    --color_Dark1: #1e1e1e;
+    --color_Dark2: #252527;
+    --color_DarkGrey: #636363;
+    --color_Light1: #dfdfdf;
+    --color_Light2: #c4c4c4;
+    --color_Light3: #fdfdfd;
+    --color_Light4: #ffffd7;
+    --color_Green1: #1c6d3f;
+    --color_Green2: #449d6b;
+    --color_Green3: #dfece4;
+    --color_Green4: #f6ffe7;
+    --color_DarkGreen: darkgreen;
+    --color_LightYellow1: #f9f9cc;
+    --color_Orange1: #fe6a50;
+    --color_LightRed: #e24a64;
+}
+
+.filter-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 48px;
+    justify-content: center;
+    /* border: solid 1px var(--color_Light2); */
+}
+
+.dashboard-container {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 18px;
+    margin-left: 36px;
+    width: 96%;
+    background-color: inherit;
+    justify-content: space-between;
+    align-items: center;
+    gap: 28px;
+    /* border: 1px solid var(--color_Green1); */
+}
+
+.home-content {
+    text-align: center;
+    width: 32%;
+    border: solid 1px var(--color_Light2);
+    border-radius: 4px;
+}
+
+
+#fyFilter,
+#monthFilter,
+#dateFilter,
+#shiftFilter,
+#modelFilter,
+#itemFilter,
+#lineFilter,
+#groupFilter {
+    height: 2rem;
+    border-radius: 4px;
+    justify-content: left;
+    align-items: center;
+    background: var(--color_Green4);
+    border: 1px solid var(--color_Green1);
+}
+
+#clearDateFilter {
+    border: 1px solid var(--color_Light2);
+    width: 1.5rem;
+    border-radius: 4px;
+    justify-content: left;
+    align-items: center;
+    background: var(--color_Orange1);
+    color: var(--color_Light3);
+    cursor: pointer;
+}
+
+#sphChart,
+#orChart,
+#ftcChart,
+#rrChart {
+    max-width: 100%;
+    max-height: 280px;
+    margin-top: 5px;
+    background: var(--color_Light4);
+    /* border: 1px solid var(--color_Orange1); */
+}
+
+
+/* ============ Responsive / Breakpoints ========== */
+@media (max-width: 1080px) {}
+
+/* For Medium Devices */
+@media (max-width: 774px) {}
+
+@media (max-width: 560px) {}
+
+/* For Small Devices */
+@media (max-width: 360px) {}

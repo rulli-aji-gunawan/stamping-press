@@ -1,0 +1,240 @@
+/* Google Fonts  */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+/* Globals  */
+* {
+    font-family: 'Poppins', sans-serif;
+    font-size: 0.8rem;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    list-style: none;
+    text-decoration: none;
+}
+
+/* Variables  */
+:root {
+    --color_Blue: #3f93f1;
+    --color_LightBlue: #e5f1ff;
+    --color_Dark1: #1e1e1e;
+    --color_Dark2: #252527;
+    --color_DarkGrey: #636363;
+    --color_Light1: #dfdfdf;
+    --color_Light2: #c4c4c4;
+    --color_Light3: #f0f0f0;
+    --color_Light4: #fdfdfd;
+    --color_Green1: #1c6d3f;
+    --color_Green2: #449d6b;
+    --color_Green3: #dfece4;
+    --color_Green4: #eff6f2;
+    --color_DarkGreen: darkgreen;
+    --color_LightYellow1: #f9f9cc;
+    --color_Orange1: #fe6a50;
+    --color_LightRed: #e24a64;
+}
+
+.tbl-data-defect td#number:hover {
+    cursor: pointer;
+    color: var(--color_Light3);
+    background-color: var(--color_Green1);
+    font-weight: bolder;
+}
+
+.tbl-data-defect a#linked-number {
+    display: flex;
+    width: 100%;
+    justify-content: center;
+    text-decoration: none;
+    font-weight: 500;
+}
+
+.tbl-data-defect #linked-number:hover {
+    cursor: pointer;
+    color: var(--color_Light3);
+    background-color: var(--color_Green1);
+    font-weight: bolder;
+}
+
+.tbl-data-defect td#action-for-table-defect {
+    display: flex;
+    width: 100%;
+    height: 100%;
+    justify-content: center;
+    align-items: center;
+    gap: 8px;
+    padding: 3px 5px;
+    border: 0.05px solid var(--color_Light1);
+}
+
+.tbl-data-defect a#btn-edit {
+    height: 100%;
+    width: 100%;
+    text-align: center;
+    align-self: center;
+    font-size: 0.7rem;
+    padding: 2px 15px;
+    border-radius: 5px;
+    justify-content: center;
+    border: none;
+    color: #fff;
+    height: 20px;
+    background-color: var(--color_Blue);
+}
+
+#userModal {
+    /* width: 80%; */
+    border-collapse: collapse;
+    margin-top: 100px;
+    margin-left: 150px;
+    opacity: 1;
+    transition: opacity 0.5s ease;
+}
+.filter-table input,
+.filter-table select {
+    width: 100%;
+    height: 1.8rem;
+    padding: 2px;
+    border: 1px solid var(--color_Light1);
+    border-radius: 5px;
+    font-size: 0.8rem;
+    color: var(--color_Dark1);
+    background: var(--color_LightYellow1);
+}
+
+.filter-table button {
+    width: 50%;
+    height: 1.8rem;
+    padding: 2px;
+    margin-right: 5px;
+    border: none;
+    border-radius: 5px;
+    font-size: 0.8rem;
+    color: var(--color_Light3);
+    background-color: var(--color_Dark1);
+    cursor: pointer;
+}
+
+.filter-table button:hover {
+    background-color: var(--color_DarkGreen);
+    color: var(--color_Light3);
+}
+
+.table-defect-container {
+    /* width: 100%; */
+    max-width: 100%;
+    overflow-x: auto;
+    margin-bottom: 20px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    -webkit-overflow-scrolling: touch;
+    /* Untuk smooth scrolling di Safari iOS */
+}
+
+.tbl-data-defect {
+    width: 100%;
+    height: max-content;
+    border-collapse: collapse;
+    opacity: 1;
+    transition: opacity 0.5s ease;
+}
+
+.tbl-data-defect th {
+    align-self: center;
+    height: 24px;
+    vertical-align: middle;
+    border: 0.1px solid var(--color_Light1);
+}
+
+.tbl-data-defect td {
+    align-self: center;
+    height: 20px;
+    vertical-align: middle;
+    border: 0.1px solid var(--color_Light1);
+}
+
+.tbl-data-defect tr:nth-child(even) {
+    background-color: var(--color_Green4);
+}
+
+.tbl-data-defect #number,
+.tbl-data-defect #shift,
+.tbl-data-defect #group,
+.tbl-data-defect #model-year,
+.tbl-data-defect #model,
+.tbl-data-defect #line {
+    width: 50px;
+    justify-items: center;
+}
+
+.tbl-data-defect #date,
+.tbl-data-defect #fy-n {
+    width: 80px;
+    justify-items: center;
+}
+
+.tbl-data-defect #action-for-table-defect,
+.tbl-data-defect #reporter,
+.tbl-data-defect #coil-no {
+    width: 80px;
+    padding-left: 5px;
+}
+
+.tbl-data-defect #data-time {
+    width: 100px;
+    justify-items: center;
+}
+
+.tbl-data-defect #item-name {
+    width: 180px;
+}
+
+.tbl-data-defect #defect-category,
+.tbl-data-defect #defect-name,
+.tbl-data-defect #defect-area,
+.tbl-data-defect #defect-qty-a,
+.tbl-data-defect #defect-qty-b {
+    width: 50px;
+    justify-items: center;
+}
+
+.tbl-data-defect th p {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 24px;
+    background: var(--color_DarkGrey);
+    color: #fff;
+    padding: 20px 5px 20px 5px;
+    font-size: 0.7rem;
+    font-weight: 500;
+}
+
+.tbl-data-defect td p {
+    display: flex;
+    align-items: center;
+    padding: 4px;
+    font-size: 0.7rem;
+    color: var(--color_Green1);
+}
+
+.tbl-data-defect td a {
+    display: flex;
+    align-items: center;
+    padding: 4px;
+    font-size: 0.7rem;
+    color: var(--color_Green1);
+}
+
+.table-scroll-indicator {
+    display: none;
+    text-align: center;
+    padding: 5px;
+    font-size: 0.7rem;
+    color: #666;
+}
+
+@media (max-width: 768px) {
+    .table-scroll-indicator {
+        display: block;
+    }
+}

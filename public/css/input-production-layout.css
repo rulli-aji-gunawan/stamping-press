@@ -1,0 +1,745 @@
+/* Google Fonts  */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+/* Globals  */
+* {
+    font-family: 'Poppins', sans-serif;
+    font-size: .8rem;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    list-style: none;
+    text-decoration: none;
+}
+
+/* Variables  */
+:root {
+    --color_Blue: #8bd4ff;
+    --color_LightBlue: #e5f1ff;
+    --color_Dark1: #1e1e1e;
+    --color_Dark2: #252527;
+    --color_DarkGrey: #636363;
+    --color_Light1: #dfdfdf;
+    --color_Light2: #c4c4c4;
+    --color_Light3: #f0f0f0;
+    --color_Light4: #fdfdfd;
+    --color_Green1: #1c6d3f;
+    --color_Green2: #449d6b;
+    --color_Green3: #dfece4;
+    --color_LightGreen1: #c5ffde;
+    --color_DarkGreen: darkgreen;
+    --color_LightYellow1: #fcfce6;
+    --color_Orange1: #fe6a50;
+    --color_LightRed: #e24a64;
+    --color_Ored: #bc4749;
+}
+
+.container {
+    display: flex;
+    flex-wrap: wrap;
+    margin-top: 32px;;
+    /* background-color: inherit; */
+    background-color: var(--color_Light4);
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    gap: 20px;
+}
+
+
+/* ========== ===== Form ============== */
+
+.report-form {
+    /* max-width: 800px; */
+    width: 100%;
+    font-size: 14px;
+}
+
+#tbl-form-input-data-production {
+    /* max-width: 800px; */
+    display: inline-block;
+    border-collapse: collapse;
+    margin-bottom: 36px;
+    /* hanya untuk check border*/
+    /* border: 1px solid var(--color_Green1); */
+}
+
+#tbl-form-input-data-production th,
+#tbl-form-input-data-production td {
+    padding: 4px;
+    width: 120px;
+    /* hanya untuk check border*/
+    /* border: 1px solid var(--color_LightRed); */
+}
+
+#tbl-form-input-data-production th {
+    text-align: right;
+    font-weight: 500;
+}
+
+#tbl-form-input-data-production input,
+#tbl-form-input-data-production select {
+    min-height: 1.8rem;
+}
+
+#reporter,
+#date,
+#production-time {
+    /* min-width: 240px; */
+    width: 100%;
+    padding-left: 10px;
+    border: 1px solid var(--color_Light2);
+    border-radius: 5px;
+    /* background: var(--color_LightYellow1); */
+    /* border: none; */
+}
+
+#time {
+    /* min-width: 240px; */
+    padding-left: 10px;
+    border: 1px solid var(--color_Light2);
+    border-radius: 5px;
+    /* background: var(--color_LightYellow1); */
+    /* border: none; */
+}
+
+.date-shift {
+    display: flex;
+    width: 100%;
+    align-items: center;
+    /* border: 1px solid red; */
+}
+
+#group,
+#shift,
+#model,
+#model_year {
+    padding-left: 10px;
+}
+
+#tbl-form-input-data-production select {
+    min-width: 96px;
+    border-radius: 5px;
+    border: 1px solid var(--color_Light2);
+    /* background: var(--color_LightYellow1); */
+    /* border: none; */
+    /* margin-right: 26px; */
+}
+
+#tbl-form-input-data-production select.which-side-a,
+#tbl-form-input-data-production select.which-side-b {
+    width: 40%;
+    background: none;
+    border: none;
+    color: var(--color_Green2);
+    padding-left: 36px;
+}
+
+#item_name {
+    width: calc(100% - 16px);
+    padding-left: 10px;
+    border: 1px solid var(--color_Light2);
+    border-radius: 5px;
+    border: none;
+}
+
+#show_total_prod_time,
+#spm,
+#line {
+    width: 100%;
+    border: 1px solid var(--color_Light2);
+    /* border: none; */
+    border-radius: 5px;
+    padding-left: 10px;
+    /* background: var(--color_LightYellow1); */
+}
+
+.tbl-qty th {
+    text-align: right;
+    vertical-align: baseline;
+    /* background: var(--color_LightYellow1); */
+    /* border: 2px solid rgb(234, 6, 6); */
+}
+
+.tbl-qty td {
+    text-align: right;
+}
+
+.label-act-qty p {
+    /* width: 82%; */
+    height: 20px;
+    text-align: center;
+    align-content: center;
+    color: var(--color_DarkGrey);
+    background: var(--color_Light3);
+    font-weight: 600;
+    border-radius: 5px;
+}
+
+/* #plan p {
+    background: var(--color_Light3);
+}
+
+#ok p {
+    background: var(--color_LightGreen1);
+}
+
+#rework p {
+    background: #fff1aa;
+}
+
+#ng p {
+    background: #ffaab8
+}
+
+#sample p {
+    background: var(--color_Blue);
+} */
+
+.input-qty {
+    border: 1px solid var(--color_Light2);
+    border-radius: 5px;
+    /* border: none; */
+    text-align: center;
+    margin-left: 10px;
+    /* background: var(--color_LightYellow1); */
+    /* border: 1px solid red; */
+}
+
+.input-qty::placeholder {
+    font-size: 10px;
+    text-align: end;
+    margin-right: 2px;
+}
+
+#show_total-prod-time::placeholder,
+#qty-exp::placeholder,
+#coil-no::placeholder {
+    font-size: 12px;
+    font-style: italic;
+}
+
+#qty_exp,
+#coil_no {
+    width: 100%;
+    border: 1px solid var(--color_Light2);
+    /* border: none; */
+    border-radius: 5px;
+    padding-left: 10px;
+    /* background: var(--color_LightYellow1); */
+}
+
+.td-right-gen {
+    text-align: end;
+    font-weight: 500;
+    color: var(--color_Green2);
+}
+
+.td-right-a,
+.td-right-b {
+    text-align: end;
+    font-size: 0.7rem;
+    font-weight: 500;
+    color: var(--color_Green2);
+}
+
+.report-form h3 {
+    margin-left: 5px;
+    width: fit-content;
+    color: var(--color_Green1);
+    font-size: 1.1rem;
+    /* border: 1px solid var(--color_Green2); */
+}
+
+
+/* ====== Table detail of problem ====== */
+
+#tbl-prod-problem {
+    margin-left: 0px;
+    border-collapse: collapse;
+    margin-top: 10px;
+    /* border: 1px solid var(--color_Green2); */
+}
+
+#tbl-prod-problem th,
+#tbl-prod-problem td {
+    padding: 3px;
+    vertical-align: top;
+    /* border: 1px solid var(--color_Green2); */
+}
+
+#tbl-prod-problem th p {
+    height: 24px;
+    border-radius: 5px;
+    border: 1px solid var(--color_Light2);
+    border: none;
+    background: var(--color_DarkGrey);
+    color: #fff;
+    align-content: center;
+    font-weight: 500;
+    font-size: .8rem;
+    /* border: 1px solid var(--color_Green2); */
+}
+
+#tbl-prod-problem th p.header-a {
+    min-width: 80px;
+}
+
+#tbl-prod-problem th p.header-a2 {
+    width: 50px;
+}
+
+#tbl-prod-problem th p.header-b {
+    min-width: 100px;
+}
+
+#tbl-prod-problem th p.header-c {
+    width: 150px;
+}
+
+#tbl-prod-problem th p.header-d {
+    width: 180px;
+}
+
+#tbl-prod-problem th p.header-e {
+    min-width: 60px;
+}
+
+#tbl-prod-problem th.header-hide {
+    min-width: 128px;
+    display: none;
+}
+
+#tbl-prod-problem td.row-hide {
+    min-width: 50px;
+    display: none;
+}
+
+.time-problem input,
+#tbl-prod-problem textarea {
+    border-radius: 5px;
+    border: 1px solid var(--color_Light2);
+    /* background: var(--color_LightYellow1); */
+}
+
+#tbl-prod-problem select,
+#tbl-prod-problem input {
+    /* min-width: 100px; */
+    width: 100%;
+    height: 2.2rem;
+    border-radius: 5px;
+    padding-left: 5px;
+    border: 1px solid var(--color_Light2);
+    /* background: var(--color_LightYellow1); */
+    font-size: .8rem;
+    /* border: none; */
+}
+
+td #total-problem-time {
+    width: 50px;
+    text-align: center;
+    align-content: center;
+}
+
+td .problem-picture-link {
+    display: inline-block;
+    width: 60px;
+    height: 2.2rem;
+    text-align: center;
+    align-content: center;
+    border: 1px solid var(--color_Light2);
+    padding: 2px 4px;
+    border-radius: 4px;
+    color: var(--color_Light2);
+    cursor: pointer;
+}
+
+td .problem-picture-link a {
+    color: blue !important;
+    text-decoration: underline;
+    font-weight: 500;
+}
+
+.img-preview-container {
+  display: flex;
+  padding: 2px;
+  align-items: center;
+  /* border: 1px solid var(--color_Light2);
+  border-radius: 4px; */
+  gap: 6px;
+}
+
+.btn-delete-image {
+  width: auto;
+  height: 1.5rem;
+  padding: 0 5px;
+  border-radius: 3px;
+  background: var(--color_LightRed);
+  color: #fff;
+  font-size: .65rem;
+  border: none;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+}
+
+.btn-delete-image:hover {
+  background-color: #d32f2f;
+}
+
+.no-image {
+  color: #999;
+  font-style: italic;
+  font-size: 0.9em;
+}
+
+td .problem-img-preview {
+    display: inline-block;
+    /* width: 60px; */
+    /* height: 2.2rem; */
+    text-align: center;
+    align-content: center;
+    /* border: 1px solid var(--color_Light2); */
+    padding: 4px;
+    /* border-radius: 4px; */
+    color: blue !important;
+    font-size: 0.8rem;
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+td .no-problem-img {
+    display: inline-block;
+    width: 100%;
+    height: 2.2rem;
+    text-align: center;
+    align-content: center;
+    /* border: 1px solid var(--color_Light2); */
+    padding: 4px;
+    /* border-radius: 4px; */
+    font-size: 0.8rem;
+}
+
+#imgModal {
+    display: none;
+    position: fixed;
+    z-index: 9999;
+    left: 0;
+    top: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.6);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#imgModal img {
+    max-width: 80vw;
+    max-height: 80vh;
+    border-radius: 8px;
+    box-shadow: 0 0 10px #333;
+    margin: auto;
+}
+
+#closeImgModal {
+    position: absolute;
+    top: 20px;
+    right: 40px;
+    font-size: 6em;
+    color: #fff;
+    cursor: pointer;
+}
+
+/* #tbl-prod-problem button {
+    width: 100%;
+    height: 2rem;
+    border-radius: 5px;
+    padding-left: 5px;
+    border: 1px solid var(--color_Light2);
+    background: var(--color_LightRed);
+    color: #fff;
+    font-size: .65rem;
+    border: none;
+    cursor: pointer;
+} */
+
+.btn-remove-row {
+    width: 100%;
+    height: 2rem;
+    border-radius: 5px;
+    padding-left: 5px;
+    border: 1px solid var(--color_Light2);
+    background: var(--color_LightRed);
+    color: #fff;
+    font-size: .65rem;
+    border: none;
+    cursor: pointer;
+}
+
+.btn-upload-picture {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 2.2rem;
+    /* Sesuaikan dengan elemen lain di baris yang sama */
+    border-radius: 5px;
+    border: 1px transparent var(--color_Light2);
+    background: transparent;
+    /* Hapus background */
+    cursor: pointer;
+}
+
+.btn-upload-picture i {
+    display: flex;
+    justify-content: center;
+    /* Posisikan di tengah horizontal */
+    align-items: center;
+    /* Posisikan di tengah vertikal */
+    color: #000;
+    font-size: 1.2rem;
+    border: none;
+    background: none;
+    /* Pastikan tidak ada background */
+}
+
+#tbl-prod-problem textarea {
+    min-width: 100%;
+    height: 2.5rem;
+    padding: 2px 2px 2px 5px;
+    /* border: none; */
+}
+
+.scroll-x-textarea {
+    overflow-x: auto;
+    white-space: pre;
+    resize: horizontal;
+    /* opsional, agar user bisa resize horizontal */
+}
+
+.time-problem #total-time::placeholder,
+#tbl-prod-problem textarea::placeholder {
+    font-size: 10px;
+    font-style: italic;
+}
+
+
+.btn-row {
+    display: flex;
+    width: fit-content;
+    margin-left: 5px;
+    margin-top: 20px;
+    margin-bottom: 16px;
+    gap: 10px;
+    /* border: 1px solid red; */
+}
+
+#btn-addRow {
+    width: 60px;
+    padding: 5px;
+    border-radius: 5px;
+    border: 1px solid var(--color_Light2);
+    color: var(--color_Green2);
+    font-weight: 600;
+    cursor: pointer;
+    background: none;
+}
+
+.production-main-row {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    width: 100%;
+    margin-bottom: 32px;
+}
+
+.production-form-col {
+    flex: 1 1 1;
+    min-width: 600px;
+}
+
+.area-mapping-col {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    min-width: 340px;
+    align-items: flex-start;
+    /* border: 1px solid var(--color_Light2); */
+}
+
+.area-mapping-image {
+    position: relative;
+    width: 340px;
+    height: 340px;
+    min-width: 220px;
+    min-height: 220px;
+    border: none;
+
+}
+
+.area-mapping-image table#area-matrix {
+    width: 100%;
+    height: 100%;
+    border-collapse: collapse;
+    z-index: 2;
+    background: transparent;
+    position: absolute;
+    top: 0;
+    left: 0;
+    border: none;
+}
+
+.area-mapping-image th {
+    background: var(--color_LightBlue);
+    color: var(--color_Dark2);
+    font-weight: 400;
+    text-align: center;
+    font-size: 0.6rem;
+    width: 20px;
+    height: 20px;
+    border: 1px solid var(--color_Light2);
+    border-radius: 2.5px;
+    overflow: hidden;
+}
+
+.area-mapping-image td.matrix-cell {
+    width: 20px;
+    height: 20px;
+    border: 0.5px solid var(--color_Light2);
+    cursor: pointer;
+    text-align: center;
+    /* background: var(--color_Light4); */
+    transition: background 0.2s;
+    /* opacity: 50%; */
+    user-select: none;
+    position: relative;
+}
+
+.area-mapping-image td.matrix-cell.selected {
+    background: var(--color_LightRed) !important;
+}
+
+.area-mapping-image img#product-image {
+    position: absolute;
+    /* adjust so image is centered in grid */
+    top: 20px;
+    left: 20px;
+    width: 320px;
+    height: 320px;
+    object-fit: contain;
+    opacity: 0.7;
+    z-index: 1;
+    pointer-events: none;
+}
+
+.area-mapping-table {
+    /* min-width: 120px; */
+    width: 340px;
+}
+
+#area-defect-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #f8f8f8;
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+#area-defect-table th {
+    background: #176d8c;
+    font-size: 0.8rem;
+    color: #fff;
+    font-weight: 400;
+    padding: 4px;
+    border: 0.5px solid var(--color_Light2);
+    overflow: hidden;
+    text-align: center;
+}
+
+#area-defect-table th#area {
+    width: 45px;
+}
+
+#area-defect-table th#defect-name {
+    width: 100px;
+}
+
+#area-defect-table th#defect-qty-a,
+#area-defect-table th#defect-qty-b {
+    width: 60px;
+}
+
+#area-defect-table th#defect-category {
+    width: 80px;
+}
+
+#area-defect-table td {
+    /* width: 100%; */
+    /* width: 80px; */
+    height: 28px;
+    padding: 2px;
+    font-size: 0.8rem;
+    text-align: center;
+    border-bottom: 1px solid var(--color_Light2);
+}
+
+#area-defect-table input[type="text"],
+#area-defect-table input[type="number"],
+#area-defect-table select {
+    width: 100%;
+    height: 90%;
+    border-radius: 2.5px;
+    border: 1px solid var(--color_Light2);
+    /* background: var(--color_LightYellow1); */
+    text-align: center;
+    font-size: 0.8rem;
+}
+
+/* #area-defect-table input[type="text"] {
+    width: 100%;
+    border-radius: 2.5px;
+    border: 1px solid var(--color_Light2);
+    text-align: center;
+    font-size: 0.8rem;
+} */
+
+.submit-btn {
+    display: flex;
+    width: 100%;
+    justify-content: start;
+    margin-left: 5px;
+    margin-top: 16px;
+    margin-bottom: 16px;
+    gap: 10px;
+    /* border: 1px solid red; */
+}
+
+.submit-btn button {
+    width: 60px;
+    padding: 5px 8px 5px 8px;
+    gap: 10px;
+    border: none;
+    border-radius: 5px;
+    color: #fff;
+    cursor: pointer;
+}
+
+#submit {
+    background-color: var(--color_Green2);
+}
+
+#cancel {
+    background: var(--color_LightRed);
+}
+
+/* ============ Responsive / Breakpoints ========== */
+@media (max-width: 1080px) {}
+
+/* For Medium Devices */
+@media (max-width: 774px) {}
+
+@media (max-width: 560px) {}
+
+/* For Small Devices */
+@media (max-width: 360px) {}
