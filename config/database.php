@@ -63,12 +63,12 @@ return [
         // Konfigurasi untuk Railway
         'mysql' => [
             'driver' => 'mysql',
-            'url' => env('MYSQL_URL', null),  // Gunakan MYSQL_URL yang sudah ada
-            'host' => env('MYSQLHOST', '127.0.0.1'),
-            'port' => env('MYSQLPORT', '3306'),
-            'database' => env('MYSQLDATABASE', 'forge'),
-            'username' => env('MYSQLUSER', 'forge'),
-            'password' => env('MYSQLPASSWORD', ''),
+            'url' => env('DATABASE_URL', env('MYSQL_URL')),  // Coba DATABASE_URL dulu
+            'host' => env('DB_HOST', env('MYSQLHOST', '127.0.0.1')),
+            'port' => env('DB_PORT', env('MYSQLPORT', '3306')),
+            'database' => env('DB_DATABASE', env('MYSQLDATABASE', 'railway')),
+            'username' => env('DB_USERNAME', env('MYSQLUSER', 'root')),
+            'password' => env('DB_PASSWORD', env('MYSQLPASSWORD', '')),
             'charset' => 'utf8mb4',
             'collation' => 'utf8mb4_unicode_ci',
             'prefix' => '',
