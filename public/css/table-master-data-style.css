@@ -24,7 +24,8 @@
     --color_Light3: #fdfdfd;
     --color_Green1: #1c6d3f;
     --color_Green2: #449d6b;
-    --color_Green3: #f2f8f4;
+    --color_Green3: #dfece4;
+    --color_Green4: #eff6f2;
     --color_DarkGreen: darkgreen;
     --color_LightYellow1: #f9f9cc;
     --color_Orange1: #fe6a50;
@@ -42,7 +43,7 @@
     padding: 20px 40px 20px 40px;
     gap: 12px;
     width: 100%;
-    border: 1px solid var(--color_Green1); 
+    border: 1px solid var(--color_Green1);
 }
 
 .filter-table {
@@ -191,5 +192,5 @@
 }
 
 .tbl-master-data tr:nth-child(even) td {
-    background: var(--color_Green3);
+    background: var(--color_Green4);
 }
