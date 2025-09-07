@@ -27,9 +27,28 @@ Route::get('/debug', function () {
         'app_env' => env('APP_ENV'),
         'app_key_set' => env('APP_KEY') ? 'YES' : 'NO',
         'db_connection' => env('DB_CONNECTION'),
+        'db_host' => env('DB_HOST'),
+        'db_database' => env('DB_DATABASE'),
+        'db_username' => env('DB_USERNAME'),
         'php_version' => PHP_VERSION,
         'laravel_version' => app()->version()
     ]);
+});
+
+// Simple database test
+Route::get('/test-db-simple', function () {
+    try {
+        $result = DB::select('SELECT 1 as test');
+        return response()->json([
+            'status' => 'success',
+            'result' => $result
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
 });
 
 // Health check endpoint for Railway
