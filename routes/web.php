@@ -203,21 +203,21 @@ Route::get('/test-login-debug', function () {
     try {
         // Test user exists
         $user = \App\Models\User::where('email', 'admin@email.com')->first();
-        
+
         if (!$user) {
             return response()->json([
                 'status' => 'error',
                 'message' => 'User not found'
             ]);
         }
-        
+
         // Test password verification
         $passwordCheck = Hash::check('aaaaa', $user->password);
-        
+
         // Test auth attempt
         $credentials = ['email' => 'admin@email.com', 'password' => 'aaaaa'];
         $authAttempt = \Auth::attempt($credentials);
-        
+
         // Check session configuration
         $sessionConfig = [
             'driver' => config('session.driver'),
@@ -227,7 +227,7 @@ Route::get('/test-login-debug', function () {
             'secure' => config('session.secure'),
             'same_site' => config('session.same_site')
         ];
-        
+
         return response()->json([
             'status' => 'debug_info',
             'user_found' => !!$user,
@@ -237,7 +237,6 @@ Route::get('/test-login-debug', function () {
             'session_config' => $sessionConfig,
             'current_auth_user' => \Auth::id()
         ]);
-        
     } catch (\Exception $e) {
         return response()->json([
             'status' => 'error',
@@ -419,3 +418,35 @@ Route::middleware('auth', 'web')->group(function () {
 Route::post('/logout', [Controllers\AuthController::class, 'logout'])
     ->name('logout')
     ->middleware('web', 'auth');
+
+// Debug dashboard data
+Route::get('/debug-dashboard', function () {
+    try {
+        // Check if production tables have data
+        $tableProductionCount = DB::table('table_productions')->count();
+        $tableDowntimeCount = DB::table('table_downtimes')->count();
+        $tableDefectCount = DB::table('table_defects')->count();
+        
+        // Check models
+        $modelItemsCount = DB::table('model_items')->count();
+        $downtimeCategoriesCount = DB::table('downtime_categories')->count();
+        
+        return response()->json([
+            'status' => 'success',
+            'table_counts' => [
+                'table_productions' => $tableProductionCount,
+                'table_downtimes' => $tableDowntimeCount,
+                'table_defects' => $tableDefectCount,
+                'model_items' => $modelItemsCount,
+                'downtime_categories' => $downtimeCategoriesCount
+            ],
+            'message' => 'Dashboard needs production data to work properly'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+    }
+});
