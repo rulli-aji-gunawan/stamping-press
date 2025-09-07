@@ -699,3 +699,350 @@ Route::get('/manual-db-fix', function () {
         ]);
     }
 });
+
+// Complete database reset and rebuild
+Route::get('/reset-database', function () {
+    try {
+        $results = [];
+
+        // Get all tables first
+        $tables = DB::select('SHOW TABLES');
+        $tableNames = [];
+        foreach ($tables as $table) {
+            $tableName = array_values((array) $table)[0];
+            if ($tableName !== 'migrations') { // Keep migrations table
+                $tableNames[] = $tableName;
+            }
+        }
+
+        // Drop all tables except migrations
+        DB::statement('SET FOREIGN_KEY_CHECKS = 0');
+        foreach ($tableNames as $tableName) {
+            DB::statement("DROP TABLE IF EXISTS `{$tableName}`");
+            $results['dropped'][] = $tableName;
+        }
+        DB::statement('SET FOREIGN_KEY_CHECKS = 1');
+
+        // Clear migrations table (except for essential ones)
+        DB::table('migrations')->truncate();
+        $results['migrations_cleared'] = true;
+
+        // Run fresh migration
+        Artisan::call('migrate', ['--force' => true]);
+        $migrationOutput = Artisan::output();
+        $results['migration_output'] = $migrationOutput;
+
+        // Run seeder for admin user
+        Artisan::call('db:seed', ['--class' => 'AdminUserSeeder', '--force' => true]);
+        $seederOutput = Artisan::output();
+        $results['seeder_output'] = $seederOutput;
+
+        // Check final state
+        $finalTables = DB::select('SHOW TABLES');
+        $finalTableNames = [];
+        foreach ($finalTables as $table) {
+            $finalTableNames[] = array_values((array) $table)[0];
+        }
+
+        $results['final_tables'] = $finalTableNames;
+        $results['user_count'] = DB::table('users')->count();
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Database completely reset and rebuilt',
+            'results' => $results
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+    }
+});
+
+// Create proper table structure based on Models
+Route::get('/create-proper-tables', function () {
+    try {
+        $results = [];
+
+        // Drop existing tables first
+        DB::statement('SET FOREIGN_KEY_CHECKS = 0');
+        DB::statement("DROP TABLE IF EXISTS `table_defects`");
+        DB::statement("DROP TABLE IF EXISTS `table_downtimes`");
+        DB::statement("DROP TABLE IF EXISTS `table_productions`");
+        DB::statement('SET FOREIGN_KEY_CHECKS = 1');
+
+        // Create table_productions based on TableProduction model
+        DB::statement("
+            CREATE TABLE `table_productions` (
+                `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+                `reporter` varchar(255) DEFAULT NULL,
+                `group` varchar(255) DEFAULT NULL,
+                `date` date DEFAULT NULL,
+                `fy_n` varchar(255) DEFAULT NULL,
+                `shift` varchar(255) DEFAULT NULL,
+                `line` varchar(255) DEFAULT NULL,
+                `start_time` time DEFAULT NULL,
+                `finish_time` time DEFAULT NULL,
+                `total_prod_time` varchar(255) DEFAULT NULL,
+                `model` varchar(255) DEFAULT NULL,
+                `model_year` varchar(255) DEFAULT NULL,
+                `spm` varchar(255) DEFAULT NULL,
+                `item_name` varchar(255) DEFAULT NULL,
+                `coil_no` varchar(255) DEFAULT NULL,
+                `plan_a` int DEFAULT NULL,
+                `plan_b` int DEFAULT NULL,
+                `ok_a` int DEFAULT NULL,
+                `ok_b` int DEFAULT NULL,
+                `rework_a` int DEFAULT NULL,
+                `rework_b` int DEFAULT NULL,
+                `scrap_a` int DEFAULT NULL,
+                `scrap_b` int DEFAULT NULL,
+                `sample_a` int DEFAULT NULL,
+                `sample_b` int DEFAULT NULL,
+                `rework_exp` text,
+                `scrap_exp` text,
+                `trial_sample_exp` text,
+                `created_at` timestamp NULL DEFAULT NULL,
+                `updated_at` timestamp NULL DEFAULT NULL,
+                PRIMARY KEY (`id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+
+        // Create table_downtimes based on TableDowntime model
+        DB::statement("
+            CREATE TABLE `table_downtimes` (
+                `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+                `table_production_id` bigint unsigned DEFAULT NULL,
+                `reporter` varchar(255) DEFAULT NULL,
+                `group` varchar(255) DEFAULT NULL,
+                `date` date DEFAULT NULL,
+                `fy_n` varchar(255) DEFAULT NULL,
+                `shift` varchar(255) DEFAULT NULL,
+                `line` varchar(255) DEFAULT NULL,
+                `model` varchar(255) DEFAULT NULL,
+                `model_year` varchar(255) DEFAULT NULL,
+                `item_name` varchar(255) DEFAULT NULL,
+                `coil_no` varchar(255) DEFAULT NULL,
+                `time_from` time DEFAULT NULL,
+                `time_until` time DEFAULT NULL,
+                `total_time` varchar(255) DEFAULT NULL,
+                `process_name` varchar(255) DEFAULT NULL,
+                `dt_category` varchar(255) DEFAULT NULL,
+                `downtime_type` varchar(255) DEFAULT NULL,
+                `dt_classification` varchar(255) DEFAULT NULL,
+                `problem_description` text,
+                `root_cause` text,
+                `counter_measure` text,
+                `pic` varchar(255) DEFAULT NULL,
+                `status` varchar(255) DEFAULT NULL,
+                `problem_picture` varchar(255) DEFAULT NULL,
+                `created_at` timestamp NULL DEFAULT NULL,
+                `updated_at` timestamp NULL DEFAULT NULL,
+                PRIMARY KEY (`id`),
+                KEY `table_downtimes_table_production_id_foreign` (`table_production_id`),
+                CONSTRAINT `table_downtimes_table_production_id_foreign` FOREIGN KEY (`table_production_id`) REFERENCES `table_productions` (`id`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+
+        // Create table_defects based on TableDefect model
+        DB::statement("
+            CREATE TABLE `table_defects` (
+                `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+                `table_production_id` bigint unsigned DEFAULT NULL,
+                `reporter` varchar(255) DEFAULT NULL,
+                `group` varchar(255) DEFAULT NULL,
+                `date` date DEFAULT NULL,
+                `fy_n` varchar(255) DEFAULT NULL,
+                `shift` varchar(255) DEFAULT NULL,
+                `line` varchar(255) DEFAULT NULL,
+                `model` varchar(255) DEFAULT NULL,
+                `model_year` varchar(255) DEFAULT NULL,
+                `item_name` varchar(255) DEFAULT NULL,
+                `coil_no` varchar(255) DEFAULT NULL,
+                `defect_category` varchar(255) DEFAULT NULL,
+                `defect_name` varchar(255) DEFAULT NULL,
+                `defect_qty_a` int DEFAULT NULL,
+                `defect_qty_b` int DEFAULT NULL,
+                `defect_area` varchar(255) DEFAULT NULL,
+                `created_at` timestamp NULL DEFAULT NULL,
+                `updated_at` timestamp NULL DEFAULT NULL,
+                PRIMARY KEY (`id`),
+                KEY `table_defects_table_production_id_foreign` (`table_production_id`),
+                CONSTRAINT `table_defects_table_production_id_foreign` FOREIGN KEY (`table_production_id`) REFERENCES `table_productions` (`id`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+
+        // Mark migrations as completed to prevent conflicts
+        $migrationFiles = [
+            '2024_08_03_080503_create_table_productions_table',
+            '2024_08_03_080717_create_table_downtimes_table',
+            '2024_08_03_080727_create_table_defects_table'
+        ];
+
+        foreach ($migrationFiles as $migration) {
+            DB::table('migrations')->updateOrInsert(
+                ['migration' => $migration],
+                ['batch' => 1]
+            );
+        }
+
+        $results['tables_created'] = ['table_productions', 'table_downtimes', 'table_defects'];
+        $results['migrations_marked'] = $migrationFiles;
+
+        // Test table structure
+        $tableTests = [];
+        $tables = ['table_productions', 'table_downtimes', 'table_defects'];
+        foreach ($tables as $table) {
+            $columns = DB::select("DESCRIBE {$table}");
+            $tableTests[$table] = [
+                'exists' => true,
+                'column_count' => count($columns),
+                'columns' => array_map(function ($col) {
+                    return $col->Field;
+                }, $columns)
+            ];
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Production tables created with proper structure',
+            'results' => $results,
+            'table_structure' => $tableTests
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+    }
+});
+
+// Generate SQL export structure for local MySQL Workbench
+Route::get('/generate-sql-export', function () {
+    try {
+        $sql = [];
+
+        // SQL to export table_productions structure and data
+        $sql[] = "-- Export structure for table_productions";
+        $sql[] = "DROP TABLE IF EXISTS `table_productions`;";
+        $sql[] = "CREATE TABLE `table_productions` (
+            `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+            `reporter` varchar(255) DEFAULT NULL,
+            `group` varchar(255) DEFAULT NULL,
+            `date` date DEFAULT NULL,
+            `fy_n` varchar(255) DEFAULT NULL,
+            `shift` varchar(255) DEFAULT NULL,
+            `line` varchar(255) DEFAULT NULL,
+            `start_time` time DEFAULT NULL,
+            `finish_time` time DEFAULT NULL,
+            `total_prod_time` varchar(255) DEFAULT NULL,
+            `model` varchar(255) DEFAULT NULL,
+            `model_year` varchar(255) DEFAULT NULL,
+            `spm` varchar(255) DEFAULT NULL,
+            `item_name` varchar(255) DEFAULT NULL,
+            `coil_no` varchar(255) DEFAULT NULL,
+            `plan_a` int DEFAULT NULL,
+            `plan_b` int DEFAULT NULL,
+            `ok_a` int DEFAULT NULL,
+            `ok_b` int DEFAULT NULL,
+            `rework_a` int DEFAULT NULL,
+            `rework_b` int DEFAULT NULL,
+            `scrap_a` int DEFAULT NULL,
+            `scrap_b` int DEFAULT NULL,
+            `sample_a` int DEFAULT NULL,
+            `sample_b` int DEFAULT NULL,
+            `rework_exp` text,
+            `scrap_exp` text,
+            `trial_sample_exp` text,
+            `created_at` timestamp NULL DEFAULT NULL,
+            `updated_at` timestamp NULL DEFAULT NULL,
+            PRIMARY KEY (`id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;";
+
+        $sql[] = "";
+        $sql[] = "-- Export structure for table_downtimes";
+        $sql[] = "DROP TABLE IF EXISTS `table_downtimes`;";
+        $sql[] = "CREATE TABLE `table_downtimes` (
+            `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+            `table_production_id` bigint unsigned DEFAULT NULL,
+            `reporter` varchar(255) DEFAULT NULL,
+            `group` varchar(255) DEFAULT NULL,
+            `date` date DEFAULT NULL,
+            `fy_n` varchar(255) DEFAULT NULL,
+            `shift` varchar(255) DEFAULT NULL,
+            `line` varchar(255) DEFAULT NULL,
+            `model` varchar(255) DEFAULT NULL,
+            `model_year` varchar(255) DEFAULT NULL,
+            `item_name` varchar(255) DEFAULT NULL,
+            `coil_no` varchar(255) DEFAULT NULL,
+            `time_from` time DEFAULT NULL,
+            `time_until` time DEFAULT NULL,
+            `total_time` varchar(255) DEFAULT NULL,
+            `process_name` varchar(255) DEFAULT NULL,
+            `dt_category` varchar(255) DEFAULT NULL,
+            `downtime_type` varchar(255) DEFAULT NULL,
+            `dt_classification` varchar(255) DEFAULT NULL,
+            `problem_description` text,
+            `root_cause` text,
+            `counter_measure` text,
+            `pic` varchar(255) DEFAULT NULL,
+            `status` varchar(255) DEFAULT NULL,
+            `problem_picture` varchar(255) DEFAULT NULL,
+            `created_at` timestamp NULL DEFAULT NULL,
+            `updated_at` timestamp NULL DEFAULT NULL,
+            PRIMARY KEY (`id`),
+            KEY `table_downtimes_table_production_id_foreign` (`table_production_id`),
+            CONSTRAINT `table_downtimes_table_production_id_foreign` FOREIGN KEY (`table_production_id`) REFERENCES `table_productions` (`id`) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;";
+
+        $sql[] = "";
+        $sql[] = "-- Export structure for table_defects";
+        $sql[] = "DROP TABLE IF EXISTS `table_defects`;";
+        $sql[] = "CREATE TABLE `table_defects` (
+            `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+            `table_production_id` bigint unsigned DEFAULT NULL,
+            `reporter` varchar(255) DEFAULT NULL,
+            `group` varchar(255) DEFAULT NULL,
+            `date` date DEFAULT NULL,
+            `fy_n` varchar(255) DEFAULT NULL,
+            `shift` varchar(255) DEFAULT NULL,
+            `line` varchar(255) DEFAULT NULL,
+            `model` varchar(255) DEFAULT NULL,
+            `model_year` varchar(255) DEFAULT NULL,
+            `item_name` varchar(255) DEFAULT NULL,
+            `coil_no` varchar(255) DEFAULT NULL,
+            `defect_category` varchar(255) DEFAULT NULL,
+            `defect_name` varchar(255) DEFAULT NULL,
+            `defect_qty_a` int DEFAULT NULL,
+            `defect_qty_b` int DEFAULT NULL,
+            `defect_area` varchar(255) DEFAULT NULL,
+            `created_at` timestamp NULL DEFAULT NULL,
+            `updated_at` timestamp NULL DEFAULT NULL,
+            PRIMARY KEY (`id`),
+            KEY `table_defects_table_production_id_foreign` (`table_production_id`),
+            CONSTRAINT `table_defects_table_production_id_foreign` FOREIGN KEY (`table_production_id`) REFERENCES `table_productions` (`id`) ON DELETE CASCADE
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;";
+
+        $sql[] = "";
+        $sql[] = "-- Instructions:";
+        $sql[] = "-- 1. Execute the above SQL in your Railway MySQL database";
+        $sql[] = "-- 2. Export your local MySQL Workbench data using mysqldump:";
+        $sql[] = "-- mysqldump -u root -p your_local_db table_productions table_downtimes table_defects --no-create-info --extended-insert > data_export.sql";
+        $sql[] = "-- 3. Import the data into Railway MySQL database";
+
+        $fullSql = implode("\n", $sql);
+
+        return response($fullSql, 200, [
+            'Content-Type' => 'text/plain',
+            'Content-Disposition' => 'attachment; filename="railway_table_structure.sql"'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+});
