@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
@@ -104,12 +105,12 @@ Route::get('/test-user', function () {
 Route::get('/run-migration', function () {
     try {
         // Run migration
-        \Artisan::call('migrate', ['--force' => true]);
-        $migrationOutput = \Artisan::output();
+        Artisan::call('migrate', ['--force' => true]);
+        $migrationOutput =  Artisan::output();
 
         // Run seeder
-        \Artisan::call('db:seed', ['--class' => 'AdminUserSeeder', '--force' => true]);
-        $seederOutput = \Artisan::output();
+        Artisan::call('db:seed', ['--class' => 'AdminUserSeeder', '--force' => true]);
+        $seederOutput = Artisan::output();
 
         // Check result
         $userCount = DB::table('users')->count();
