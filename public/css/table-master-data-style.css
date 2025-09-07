@@ -80,6 +80,12 @@
     background: var(--color_Dark2);
 }
 
+#btn-editMasterData:hover,
+#btn-delMasterData:hover {
+    cursor: pointer;
+    background: var(--color_Light2);
+}
+
 #btn-addMasterData {
     min-width: 50px;
     padding: 2px 6px 2px 6px;
@@ -94,29 +100,38 @@
 }
 
 #btn-editMasterData {
-    width: 40px;
+    width: 100%;
     /* padding: 2px 5px 2px 5px; */
     justify-content: center;
     border-radius: 5px;
     border: 1px solid var(--color_Light2);
-    background: var(--color_Blue);
+    background: none;
     border: none;
-    color: #fff;
-    height: 16px;
-    font-size: 0.8rem;
+    color: var(--color_Blue);
+    /* height: 16px; */
+    font-size: 1.2rem;
 }
 
 #btn-delMasterData {
-    width: 62px;
+    width: 100%;
     /* padding: 2px 5px 2px 5px; */
     justify-content: center;
     border-radius: 5px;
     border: 1px solid var(--color_Light2);
     border: none;
-    background: var(--color_LightRed);
-    color: #fff;
-    height: 16px;
-    font-size: 0.8rem;
+    background: none;
+    color: var(--color_LightRed);
+    height: 20px;
+    font-size: 1rem;
+}
+
+#action i {
+    /* display: flex;
+    justify-content: center;
+    align-items: center; */
+    height: 20px;
+    width: 20px;
+    font-size: 1.2rem;
 }
 
 .tbl-master-data {

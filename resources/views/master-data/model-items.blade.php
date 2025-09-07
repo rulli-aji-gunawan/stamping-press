@@ -72,11 +72,11 @@
                     <td id="action">
                         <p>
                             <button id="btn-editMasterData" class="edit-model-btn"
-                                data_id="{{ $model_item->id }}">Edit</button>
+                                data_id="{{ $model_item->id }}"><i class='bx bx-edit'></button>
 
                             <button class="delete-model-btn" data_id="{{ $model_item->id }}"
                                 model_code="{{ $model_item->model_code }}" item_name="{{ $model_item->item_name }}"
-                                id="btn-delMasterData">Delete</button>
+                                id="btn-delMasterData"><i class='bx bx-trash'></i></button>
                         </p>
                     </td>
                 </tr>

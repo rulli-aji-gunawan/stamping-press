@@ -55,10 +55,10 @@
                         <p>
                             <button id="btn-editMasterData" class="edit-process-name-btn"
                                 data_id="{{ $process_name->id }}"
-                                process_name="{{ $process_name->process_name }}">Edit</button>
+                                process_name="{{ $process_name->process_name }}"><i class='bx bx-edit'></i></button>
 
                             <button class="delete-process-name-btn" data_id="{{ $process_name->id }}"
-                                process_name="{{ $process_name->process_name }}" id="btn-delMasterData">Delete</button>
+                                process_name="{{ $process_name->process_name }}" id="btn-delMasterData"><i class='bx bx-trash'></i></button>
                         </p>
                     </td>
                 </tr>

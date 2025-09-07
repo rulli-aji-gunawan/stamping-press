@@ -59,12 +59,12 @@
                     </td>
                     <td id="action">
                         <p><button id="btn-editMasterData" class="edit-downtime-category-btn"
-                                data_id="{{ $downtime_category->id }}">Edit</button>
+                                data_id="{{ $downtime_category->id }}"><i class='bx bx-edit'></button>
 
                             <button class="delete-downtime-category-btn" data_id="{{ $downtime_category->id }}"
                                 downtime_name="{{ $downtime_category->downtime_name }}"
                                 downtime_type="{{ $downtime_category->downtime_type }}"
-                                id="btn-delMasterData">Delete</button>
+                                id="btn-delMasterData"><i class='bx bx-trash'></i></button>
                         </p>
                     </td>
                 </tr>

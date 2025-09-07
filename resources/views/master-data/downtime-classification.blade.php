@@ -54,12 +54,12 @@
                     <td id="action">
                         <p><button id="btn-editMasterData" class="edit-downtime-classification-btn"
                                 data_id="{{ $dt_classification->id }}"
-                                dt_classification="{{ $dt_classification->dt_classification }}">Edit</button>
+                                dt_classification="{{ $dt_classification->dt_classification }}"><i class='bx bx-edit'></button>
 
                             <button class="delete-downtime-classification-btn" data_id="{{ $dt_classification->id }}"
                                 dt_classification="{{ $dt_classification->dt_classification }}"
                                 dt_classification_name="{{ $dt_classification->downtime_classification }}"
-                                id="btn-delMasterData">Delete</button>
+                                id="btn-delMasterData"><i class='bx bx-trash'></i></button>
                         </p>
                     </td>
                 </tr>
