@@ -130,6 +130,47 @@ Route::get('/run-migration', function () {
     }
 });
 
+// Create admin user manually
+Route::get('/create-admin', function () {
+    try {
+        // Check if admin already exists
+        $existingAdmin = \App\Models\User::where('email', 'admin@email.com')->first();
+        
+        if ($existingAdmin) {
+            return response()->json([
+                'status' => 'info',
+                'message' => 'Admin user already exists',
+                'admin_email' => 'admin@email.com'
+            ]);
+        }
+        
+        // Create admin user
+        $admin = \App\Models\User::create([
+            'name' => 'Administrator',
+            'email' => 'admin@email.com',
+            'password' => Hash::make('aaaaa'),
+            'email_verified_at' => now()
+        ]);
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Admin user created successfully',
+            'admin_id' => $admin->id,
+            'admin_email' => $admin->email,
+            'login_credentials' => [
+                'email' => 'admin@email.com',
+                'password' => 'aaaaa'
+            ]
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+    }
+});
+
 // Health check endpoint for Railway
 Route::get('/health', function () {
     try {
