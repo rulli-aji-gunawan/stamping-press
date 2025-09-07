@@ -135,7 +135,7 @@ Route::get('/create-admin', function () {
     try {
         // Check if admin already exists
         $existingAdmin = \App\Models\User::where('email', 'admin@email.com')->first();
-        
+
         if ($existingAdmin) {
             return response()->json([
                 'status' => 'info',
@@ -143,7 +143,7 @@ Route::get('/create-admin', function () {
                 'admin_email' => 'admin@email.com'
             ]);
         }
-        
+
         // Create admin user
         $admin = \App\Models\User::create([
             'name' => 'Administrator',
@@ -151,7 +151,7 @@ Route::get('/create-admin', function () {
             'password' => Hash::make('aaaaa'),
             'email_verified_at' => now()
         ]);
-        
+
         return response()->json([
             'status' => 'success',
             'message' => 'Admin user created successfully',
@@ -196,6 +196,55 @@ Route::get('/health', function () {
 Route::get('/ping', function () {
     return response('pong', 200)
         ->header('Content-Type', 'text/plain');
+});
+
+// Test login process debug
+Route::get('/test-login-debug', function () {
+    try {
+        // Test user exists
+        $user = \App\Models\User::where('email', 'admin@email.com')->first();
+        
+        if (!$user) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'User not found'
+            ]);
+        }
+        
+        // Test password verification
+        $passwordCheck = Hash::check('aaaaa', $user->password);
+        
+        // Test auth attempt
+        $credentials = ['email' => 'admin@email.com', 'password' => 'aaaaa'];
+        $authAttempt = \Auth::attempt($credentials);
+        
+        // Check session configuration
+        $sessionConfig = [
+            'driver' => config('session.driver'),
+            'lifetime' => config('session.lifetime'),
+            'path' => config('session.path'),
+            'domain' => config('session.domain'),
+            'secure' => config('session.secure'),
+            'same_site' => config('session.same_site')
+        ];
+        
+        return response()->json([
+            'status' => 'debug_info',
+            'user_found' => !!$user,
+            'user_id' => $user->id,
+            'password_correct' => $passwordCheck,
+            'auth_attempt' => $authAttempt,
+            'session_config' => $sessionConfig,
+            'current_auth_user' => \Auth::id()
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+    }
 });
 
 Route::get('/test-db', function () {
