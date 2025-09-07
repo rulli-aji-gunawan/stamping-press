@@ -100,6 +100,35 @@ Route::get('/test-user', function () {
     }
 });
 
+// Manual migration trigger
+Route::get('/run-migration', function () {
+    try {
+        // Run migration
+        \Artisan::call('migrate', ['--force' => true]);
+        $migrationOutput = \Artisan::output();
+
+        // Run seeder
+        \Artisan::call('db:seed', ['--class' => 'AdminUserSeeder', '--force' => true]);
+        $seederOutput = \Artisan::output();
+
+        // Check result
+        $userCount = DB::table('users')->count();
+
+        return response()->json([
+            'status' => 'success',
+            'migration_output' => $migrationOutput,
+            'seeder_output' => $seederOutput,
+            'users_created' => $userCount
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+    }
+});
+
 // Health check endpoint for Railway
 Route::get('/health', function () {
     try {
