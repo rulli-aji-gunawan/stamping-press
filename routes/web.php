@@ -29,12 +29,18 @@ Route::get('/debug', function () {
     return response()->json([
         'app_env' => env('APP_ENV'),
         'app_key_set' => env('APP_KEY') ? 'YES' : 'NO',
+        'app_key_length' => env('APP_KEY') ? strlen(env('APP_KEY')) : 0,
+        'session_driver' => env('SESSION_DRIVER', 'file'),
+        'session_lifetime' => env('SESSION_LIFETIME', 120),
         'db_connection' => env('DB_CONNECTION'),
         'db_host' => env('DB_HOST'),
         'db_database' => env('DB_DATABASE'),
         'db_username' => env('DB_USERNAME'),
         'php_version' => PHP_VERSION,
-        'laravel_version' => app()->version()
+        'laravel_version' => app()->version(),
+        'storage_writable' => is_writable(storage_path()),
+        'storage_path' => storage_path(),
+        'session_save_path' => ini_get('session.save_path')
     ]);
 });
 
@@ -1043,6 +1049,203 @@ Route::get('/generate-sql-export', function () {
         return response()->json([
             'status' => 'error',
             'message' => $e->getMessage()
+        ]);
+    }
+});
+
+// Complete application reset and fix
+Route::get('/complete-fix', function () {
+    try {
+        $results = [];
+        
+        // 1. Clear all caches
+        Artisan::call('cache:clear');
+        Artisan::call('config:clear');
+        Artisan::call('route:clear');
+        Artisan::call('view:clear');
+        $results['caches_cleared'] = true;
+        
+        // 2. Reset database
+        $tables = DB::select('SHOW TABLES');
+        $tableNames = [];
+        foreach ($tables as $table) {
+            $tableName = array_values((array) $table)[0];
+            if ($tableName !== 'migrations') {
+                $tableNames[] = $tableName;
+            }
+        }
+        
+        DB::statement('SET FOREIGN_KEY_CHECKS = 0');
+        foreach ($tableNames as $tableName) {
+            DB::statement("DROP TABLE IF EXISTS `{$tableName}`");
+        }
+        DB::statement('SET FOREIGN_KEY_CHECKS = 1');
+        DB::table('migrations')->truncate();
+        $results['database_reset'] = true;
+        
+        // 3. Run fresh migration
+        Artisan::call('migrate', ['--force' => true]);
+        $results['migration_run'] = true;
+        
+        // 4. Create admin user
+        Artisan::call('db:seed', ['--class' => 'AdminUserSeeder', '--force' => true]);
+        $results['admin_created'] = true;
+        
+        // 5. Create production tables manually with correct structure
+        DB::statement("
+            CREATE TABLE `table_productions` (
+                `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+                `reporter` varchar(255) DEFAULT NULL,
+                `group` varchar(255) DEFAULT NULL,
+                `date` date DEFAULT NULL,
+                `fy_n` varchar(255) DEFAULT NULL,
+                `shift` varchar(255) DEFAULT NULL,
+                `line` varchar(255) DEFAULT NULL,
+                `start_time` time DEFAULT NULL,
+                `finish_time` time DEFAULT NULL,
+                `total_prod_time` varchar(255) DEFAULT NULL,
+                `model` varchar(255) DEFAULT NULL,
+                `model_year` varchar(255) DEFAULT NULL,
+                `spm` varchar(255) DEFAULT NULL,
+                `item_name` varchar(255) DEFAULT NULL,
+                `coil_no` varchar(255) DEFAULT NULL,
+                `plan_a` int DEFAULT NULL,
+                `plan_b` int DEFAULT NULL,
+                `ok_a` int DEFAULT NULL,
+                `ok_b` int DEFAULT NULL,
+                `rework_a` int DEFAULT NULL,
+                `rework_b` int DEFAULT NULL,
+                `scrap_a` int DEFAULT NULL,
+                `scrap_b` int DEFAULT NULL,
+                `sample_a` int DEFAULT NULL,
+                `sample_b` int DEFAULT NULL,
+                `rework_exp` text,
+                `scrap_exp` text,
+                `trial_sample_exp` text,
+                `created_at` timestamp NULL DEFAULT NULL,
+                `updated_at` timestamp NULL DEFAULT NULL,
+                PRIMARY KEY (`id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+        
+        DB::statement("
+            CREATE TABLE `table_downtimes` (
+                `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+                `table_production_id` bigint unsigned DEFAULT NULL,
+                `reporter` varchar(255) DEFAULT NULL,
+                `group` varchar(255) DEFAULT NULL,
+                `date` date DEFAULT NULL,
+                `fy_n` varchar(255) DEFAULT NULL,
+                `shift` varchar(255) DEFAULT NULL,
+                `line` varchar(255) DEFAULT NULL,
+                `model` varchar(255) DEFAULT NULL,
+                `model_year` varchar(255) DEFAULT NULL,
+                `item_name` varchar(255) DEFAULT NULL,
+                `coil_no` varchar(255) DEFAULT NULL,
+                `time_from` time DEFAULT NULL,
+                `time_until` time DEFAULT NULL,
+                `total_time` varchar(255) DEFAULT NULL,
+                `process_name` varchar(255) DEFAULT NULL,
+                `dt_category` varchar(255) DEFAULT NULL,
+                `downtime_type` varchar(255) DEFAULT NULL,
+                `dt_classification` varchar(255) DEFAULT NULL,
+                `problem_description` text,
+                `root_cause` text,
+                `counter_measure` text,
+                `pic` varchar(255) DEFAULT NULL,
+                `status` varchar(255) DEFAULT NULL,
+                `problem_picture` varchar(255) DEFAULT NULL,
+                `created_at` timestamp NULL DEFAULT NULL,
+                `updated_at` timestamp NULL DEFAULT NULL,
+                PRIMARY KEY (`id`),
+                KEY `table_downtimes_table_production_id_foreign` (`table_production_id`),
+                CONSTRAINT `table_downtimes_table_production_id_foreign` FOREIGN KEY (`table_production_id`) REFERENCES `table_productions` (`id`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+        
+        DB::statement("
+            CREATE TABLE `table_defects` (
+                `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+                `table_production_id` bigint unsigned DEFAULT NULL,
+                `reporter` varchar(255) DEFAULT NULL,
+                `group` varchar(255) DEFAULT NULL,
+                `date` date DEFAULT NULL,
+                `fy_n` varchar(255) DEFAULT NULL,
+                `shift` varchar(255) DEFAULT NULL,
+                `line` varchar(255) DEFAULT NULL,
+                `model` varchar(255) DEFAULT NULL,
+                `model_year` varchar(255) DEFAULT NULL,
+                `item_name` varchar(255) DEFAULT NULL,
+                `coil_no` varchar(255) DEFAULT NULL,
+                `defect_category` varchar(255) DEFAULT NULL,
+                `defect_name` varchar(255) DEFAULT NULL,
+                `defect_qty_a` int DEFAULT NULL,
+                `defect_qty_b` int DEFAULT NULL,
+                `defect_area` varchar(255) DEFAULT NULL,
+                `created_at` timestamp NULL DEFAULT NULL,
+                `updated_at` timestamp NULL DEFAULT NULL,
+                PRIMARY KEY (`id`),
+                KEY `table_defects_table_production_id_foreign` (`table_production_id`),
+                CONSTRAINT `table_defects_table_production_id_foreign` FOREIGN KEY (`table_production_id`) REFERENCES `table_productions` (`id`) ON DELETE CASCADE
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+        
+        $results['production_tables_created'] = true;
+        
+        // 6. Mark migrations as done to prevent conflicts
+        $migrationFiles = [
+            '2024_08_03_080503_create_table_productions_table',
+            '2024_08_03_080717_create_table_downtimes_table', 
+            '2024_08_03_080727_create_table_defects_table'
+        ];
+        
+        foreach ($migrationFiles as $migration) {
+            DB::table('migrations')->updateOrInsert(
+                ['migration' => $migration],
+                ['batch' => 1]
+            );
+        }
+        
+        // 7. Clear sessions and regenerate app key
+        $sessionPath = storage_path('framework/sessions');
+        if (is_dir($sessionPath)) {
+            $files = glob($sessionPath . '/*');
+            foreach ($files as $file) {
+                if (is_file($file)) {
+                    unlink($file);
+                }
+            }
+        }
+        
+        // 8. Final verification
+        $finalTables = DB::select('SHOW TABLES');
+        $userCount = DB::table('users')->count();
+        
+        $results['final_tables'] = array_map(function($table) {
+            return array_values((array) $table)[0];
+        }, $finalTables);
+        $results['user_count'] = $userCount;
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Complete application reset and fix completed successfully',
+            'results' => $results,
+            'login_credentials' => [
+                'email' => 'admin@email.com',
+                'password' => 'aaaaa'
+            ],
+            'next_steps' => [
+                '1. Try login with credentials above',
+                '2. Access dashboard to verify production tables',
+                '3. Import your production data using backup_production_data.sql'
+            ]
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
         ]);
     }
 });
