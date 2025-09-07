@@ -1,10 +1,11 @@
 <?php
 
-use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Artisan;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\UserController;
@@ -216,7 +217,7 @@ Route::get('/test-login-debug', function () {
 
         // Test auth attempt
         $credentials = ['email' => 'admin@email.com', 'password' => 'aaaaa'];
-        $authAttempt = \Auth::attempt($credentials);
+        $authAttempt = Auth::attempt($credentials);
 
         // Check session configuration
         $sessionConfig = [
@@ -235,7 +236,7 @@ Route::get('/test-login-debug', function () {
             'password_correct' => $passwordCheck,
             'auth_attempt' => $authAttempt,
             'session_config' => $sessionConfig,
-            'current_auth_user' => \Auth::id()
+            'current_auth_user' => Auth::id()
         ]);
     } catch (\Exception $e) {
         return response()->json([
@@ -426,11 +427,11 @@ Route::get('/debug-dashboard', function () {
         $tableProductionCount = DB::table('table_productions')->count();
         $tableDowntimeCount = DB::table('table_downtimes')->count();
         $tableDefectCount = DB::table('table_defects')->count();
-        
+
         // Check models
         $modelItemsCount = DB::table('model_items')->count();
         $downtimeCategoriesCount = DB::table('downtime_categories')->count();
-        
+
         return response()->json([
             'status' => 'success',
             'table_counts' => [
@@ -441,6 +442,98 @@ Route::get('/debug-dashboard', function () {
                 'downtime_categories' => $downtimeCategoriesCount
             ],
             'message' => 'Dashboard needs production data to work properly'
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+    }
+});
+
+// Check migration status
+Route::get('/check-migrations', function () {
+    try {
+        // Get all migrations that have been run
+        $migrationsRun = DB::table('migrations')->pluck('migration')->toArray();
+        
+        // Get all migration files - simplified approach
+        $migrationFiles = [
+            '0001_01_01_000000_create_users_table',
+            '2025_05_04_213826_create_table_productions_table',
+            '2025_06_30_061935_create_table_downtimes_table', 
+            '2025_07_15_055100_create_table_defects_table'
+        ];
+        
+        // Find missing migrations
+        $missingMigrations = array_diff($migrationFiles, $migrationsRun);
+        
+        // Check specific tables
+        $tableChecks = [];
+        $tables = ['table_productions', 'table_downtimes', 'table_defects'];
+        foreach ($tables as $table) {
+            try {
+                DB::select("SHOW TABLES LIKE '{$table}'");
+                $tableChecks[$table] = 'exists';
+            } catch (\Exception $e) {
+                $tableChecks[$table] = 'missing';
+            }
+        }
+        
+        return response()->json([
+            'status' => 'success',
+            'total_migrations_run' => count($migrationsRun),
+            'missing_migrations' => array_values($missingMigrations),
+            'table_status' => $tableChecks,
+            'last_5_migrations_run' => array_slice($migrationsRun, -5)
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+});
+
+// Force migrate specific production tables
+Route::get('/migrate-production-tables', function () {
+    try {
+        // Use Artisan directly instead of shell_exec
+        $output = [];
+        
+        // Check current table status first
+        $beforeStatus = [];
+        $tables = ['table_productions', 'table_downtimes', 'table_defects'];
+        foreach ($tables as $table) {
+            try {
+                $exists = DB::select("SHOW TABLES LIKE '{$table}'");
+                $beforeStatus[$table] = !empty($exists) ? 'exists' : 'missing';
+            } catch (\Exception $e) {
+                $beforeStatus[$table] = 'error';
+            }
+        }
+        
+        // Run migration
+        Artisan::call('migrate', ['--force' => true]);
+        $migrationOutput = Artisan::output();
+        
+        // Check tables after migration
+        $afterStatus = [];
+        foreach ($tables as $table) {
+            try {
+                $exists = DB::select("SHOW TABLES LIKE '{$table}'");
+                $afterStatus[$table] = !empty($exists) ? 'exists' : 'missing';
+            } catch (\Exception $e) {
+                $afterStatus[$table] = 'error: ' . $e->getMessage();
+            }
+        }
+        
+        return response()->json([
+            'status' => 'success',
+            'before_migration' => $beforeStatus,
+            'migration_output' => $migrationOutput,
+            'after_migration' => $afterStatus
         ]);
     } catch (\Exception $e) {
         return response()->json([
