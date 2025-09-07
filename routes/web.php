@@ -2,6 +2,7 @@
 
 use App\Http\Controllers;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\HomeController;
@@ -47,6 +48,54 @@ Route::get('/test-db-simple', function () {
         return response()->json([
             'status' => 'error',
             'message' => $e->getMessage()
+        ]);
+    }
+});
+
+// Check database tables
+Route::get('/check-tables', function () {
+    try {
+        $tables = DB::select('SHOW TABLES');
+
+        // Check if users table exists and has data
+        $usersExist = DB::select("SHOW TABLES LIKE 'users'");
+        $userCount = $usersExist ? DB::table('users')->count() : 0;
+
+        return response()->json([
+            'status' => 'success',
+            'tables' => $tables,
+            'users_table_exists' => !empty($usersExist),
+            'users_count' => $userCount
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage()
+        ]);
+    }
+});
+
+// Test user creation
+Route::get('/test-user', function () {
+    try {
+        // Try to create a test user
+        $user = \App\Models\User::firstOrCreate([
+            'email' => 'test@stampingpress.com'
+        ], [
+            'name' => 'Test User',
+            'password' => Hash::make('password123')
+        ]);
+
+        return response()->json([
+            'status' => 'success',
+            'user_id' => $user->id,
+            'user_email' => $user->email
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
         ]);
     }
 });
