@@ -21,6 +21,17 @@ Route::get('/up', function () {
     return 'OK';
 });
 
+// Debug environment
+Route::get('/debug', function () {
+    return response()->json([
+        'app_env' => env('APP_ENV'),
+        'app_key_set' => env('APP_KEY') ? 'YES' : 'NO',
+        'db_connection' => env('DB_CONNECTION'),
+        'php_version' => PHP_VERSION,
+        'laravel_version' => app()->version()
+    ]);
+});
+
 // Health check endpoint for Railway
 Route::get('/health', function () {
     try {
