@@ -18,11 +18,29 @@ use App\Http\Controllers\DowntimeClassificationController;
 
 // Health check endpoint for Railway
 Route::get('/health', function () {
-    return response()->json([
-        'status' => 'ok',
-        'timestamp' => now(),
-        'app' => config('app.name', 'StampingPress')
-    ]);
+    try {
+        // Test database connection
+        DB::connection()->getPdo();
+        
+        return response()->json([
+            'status' => 'ok',
+            'timestamp' => now(),
+            'app' => config('app.name', 'StampingPress'),
+            'database' => 'connected'
+        ], 200);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => 'Database connection failed',
+            'timestamp' => now()
+        ], 500);
+    }
+});
+
+// Simple health check without DB
+Route::get('/ping', function () {
+    return response('pong', 200)
+        ->header('Content-Type', 'text/plain');
 });
 
 Route::get('/test-db', function () {

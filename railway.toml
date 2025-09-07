@@ -2,6 +2,6 @@
 builder = "nixpacks"
 
 [deploy]
-healthcheckPath = "/health"
-healthcheckTimeout = 100
+healthcheckPath = "/ping"
+healthcheckTimeout = 60
 restartPolicyType = "always"
