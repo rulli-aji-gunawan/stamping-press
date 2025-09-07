@@ -590,3 +590,113 @@ Route::get('/fix-migration-conflicts', function () {
         ]);
     }
 });
+
+// Manual database structure fix
+Route::get('/manual-db-fix', function () {
+    try {
+        $results = [];
+        
+        // Drop and recreate table_productions with correct structure
+        DB::statement('DROP TABLE IF EXISTS table_productions');
+        $results['table_productions'] = 'dropped';
+        
+        // Create table_productions with correct structure
+        DB::statement('
+            CREATE TABLE table_productions (
+                id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                fy_n VARCHAR(255),
+                date DATE,
+                shift VARCHAR(255),
+                line VARCHAR(255),
+                `group` VARCHAR(255),
+                model VARCHAR(255),
+                item_name VARCHAR(255),
+                target INT,
+                actual INT,
+                achievement DECIMAL(5,2),
+                created_at TIMESTAMP NULL,
+                updated_at TIMESTAMP NULL
+            )
+        ');
+        $results['table_productions'] = 'created';
+        
+        // Drop and recreate table_downtimes with correct structure
+        DB::statement('DROP TABLE IF EXISTS table_downtimes');
+        
+        DB::statement('
+            CREATE TABLE table_downtimes (
+                id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                fy_n VARCHAR(255),
+                date DATE,
+                shift VARCHAR(255),
+                line VARCHAR(255),
+                `group` VARCHAR(255),
+                model VARCHAR(255),
+                item_name VARCHAR(255),
+                downtime_type VARCHAR(255),
+                dt_category VARCHAR(255),
+                dt_classification VARCHAR(255),
+                total_time INT,
+                created_at TIMESTAMP NULL,
+                updated_at TIMESTAMP NULL
+            )
+        ');
+        $results['table_downtimes'] = 'created';
+        
+        // Drop and recreate table_defects with correct structure
+        DB::statement('DROP TABLE IF EXISTS table_defects');
+        
+        DB::statement('
+            CREATE TABLE table_defects (
+                id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+                fy_n VARCHAR(255),
+                date DATE,
+                shift VARCHAR(255),
+                line VARCHAR(255),
+                `group` VARCHAR(255),
+                model VARCHAR(255),
+                item_name VARCHAR(255),
+                defect_category VARCHAR(255),
+                total_defect INT,
+                created_at TIMESTAMP NULL,
+                updated_at TIMESTAMP NULL
+            )
+        ');
+        $results['table_defects'] = 'created';
+        
+        // Mark migrations as completed
+        $migrations = [
+            '2025_05_04_213826_create_table_productions_table',
+            '2025_06_30_061935_create_table_downtimes_table',
+            '2025_07_15_055100_create_table_defects_table'
+        ];
+        
+        foreach ($migrations as $migration) {
+            DB::table('migrations')->updateOrInsert(
+                ['migration' => $migration],
+                ['batch' => DB::table('migrations')->max('batch') + 1]
+            );
+        }
+        $results['migrations_marked'] = 'completed';
+        
+        // Test tables
+        $tableTests = [];
+        $tableTests['table_productions'] = DB::table('table_productions')->count();
+        $tableTests['table_downtimes'] = DB::table('table_downtimes')->count();
+        $tableTests['table_defects'] = DB::table('table_defects')->count();
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Database structure manually fixed',
+            'operations' => $results,
+            'table_counts' => $tableTests
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+    }
+});
