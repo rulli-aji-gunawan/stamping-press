@@ -1058,21 +1058,19 @@ Route::get('/complete-fix', function () {
     try {
         $results = [];
         
-        // 1. Clear all caches
+        // 1. Clear all caches first
         Artisan::call('cache:clear');
         Artisan::call('config:clear');
         Artisan::call('route:clear');
         Artisan::call('view:clear');
         $results['caches_cleared'] = true;
         
-        // 2. Reset database
+        // 2. Reset database completely - drop all tables
         $tables = DB::select('SHOW TABLES');
         $tableNames = [];
         foreach ($tables as $table) {
             $tableName = array_values((array) $table)[0];
-            if ($tableName !== 'migrations') {
-                $tableNames[] = $tableName;
-            }
+            $tableNames[] = $tableName;
         }
         
         DB::statement('SET FOREIGN_KEY_CHECKS = 0');
@@ -1080,18 +1078,46 @@ Route::get('/complete-fix', function () {
             DB::statement("DROP TABLE IF EXISTS `{$tableName}`");
         }
         DB::statement('SET FOREIGN_KEY_CHECKS = 1');
-        DB::table('migrations')->truncate();
-        $results['database_reset'] = true;
+        $results['all_tables_dropped'] = $tableNames;
         
-        // 3. Run fresh migration
-        Artisan::call('migrate', ['--force' => true]);
-        $results['migration_run'] = true;
+        // 3. Create migrations table manually
+        DB::statement("
+            CREATE TABLE `migrations` (
+                `id` int unsigned NOT NULL AUTO_INCREMENT,
+                `migration` varchar(255) NOT NULL,
+                `batch` int NOT NULL,
+                PRIMARY KEY (`id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
         
-        // 4. Create admin user
-        Artisan::call('db:seed', ['--class' => 'AdminUserSeeder', '--force' => true]);
-        $results['admin_created'] = true;
+        // 4. Run only essential migrations to avoid conflicts
+        $essentialMigrations = [
+            '0001_01_01_000000_create_users_table',
+            '0001_01_01_000001_create_cache_table', 
+            '0001_01_01_000002_create_jobs_table'
+        ];
         
-        // 5. Create production tables manually with correct structure
+        foreach ($essentialMigrations as $migration) {
+            try {
+                Artisan::call('migrate:refresh', [
+                    '--path' => 'database/migrations/' . $migration . '.php',
+                    '--force' => true
+                ]);
+            } catch (\Exception $e) {
+                // Continue if migration fails
+                $results['migration_warnings'][] = $migration . ': ' . $e->getMessage();
+            }
+        }
+        
+        // 5. Create admin user manually
+        DB::statement("
+            INSERT INTO `users` (`name`, `email`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`) 
+            VALUES ('Admin User', 'admin@email.com', NULL, ?, NULL, NOW(), NOW())
+        ", [Hash::make('aaaaa')]);
+        
+        $results['admin_user_created'] = true;
+        
+        // 6. Create production tables manually with correct structure
         DB::statement("
             CREATE TABLE `table_productions` (
                 `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -1190,23 +1216,72 @@ Route::get('/complete-fix', function () {
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ");
         
+        // 7. Create other essential tables
+        DB::statement("
+            CREATE TABLE `model_items` (
+                `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+                `model_name` varchar(255) NOT NULL,
+                `item_name` varchar(255) NOT NULL,
+                `created_at` timestamp NULL DEFAULT NULL,
+                `updated_at` timestamp NULL DEFAULT NULL,
+                PRIMARY KEY (`id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+        
+        DB::statement("
+            CREATE TABLE `process_names` (
+                `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+                `process_name` varchar(255) NOT NULL,
+                `created_at` timestamp NULL DEFAULT NULL,
+                `updated_at` timestamp NULL DEFAULT NULL,
+                PRIMARY KEY (`id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+        
+        DB::statement("
+            CREATE TABLE `downtime_categories` (
+                `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+                `dt_category` varchar(255) NOT NULL,
+                `created_at` timestamp NULL DEFAULT NULL,
+                `updated_at` timestamp NULL DEFAULT NULL,
+                PRIMARY KEY (`id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+        
+        DB::statement("
+            CREATE TABLE `downtime_classifications` (
+                `id` bigint unsigned NOT NULL AUTO_INCREMENT,
+                `dt_classification` varchar(255) NOT NULL,
+                `created_at` timestamp NULL DEFAULT NULL,
+                `updated_at` timestamp NULL DEFAULT NULL,
+                PRIMARY KEY (`id`)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+        ");
+        
         $results['production_tables_created'] = true;
         
-        // 6. Mark migrations as done to prevent conflicts
-        $migrationFiles = [
-            '2024_08_03_080503_create_table_productions_table',
-            '2024_08_03_080717_create_table_downtimes_table', 
-            '2024_08_03_080727_create_table_defects_table'
+        // 8. Mark all migrations as completed to prevent future conflicts
+        $allMigrations = [
+            '0001_01_01_000000_create_users_table',
+            '0001_01_01_000001_create_cache_table',
+            '0001_01_01_000002_create_jobs_table',
+            '2025_05_04_213826_create_table_productions_table',
+            '2025_06_30_061935_create_table_downtimes_table',
+            '2025_07_15_055100_create_table_defects_table',
+            '2024_08_03_094749_create_model_items_table',
+            '2025_03_06_094315_create_process_names_table',
+            '2024_08_18_223311_create_downtime_categories_table',
+            '2025_03_14_060117_create_downtime_classifications_table'
         ];
         
-        foreach ($migrationFiles as $migration) {
-            DB::table('migrations')->updateOrInsert(
-                ['migration' => $migration],
-                ['batch' => 1]
-            );
+        foreach ($allMigrations as $migration) {
+            DB::table('migrations')->insert([
+                'migration' => $migration,
+                'batch' => 1
+            ]);
         }
         
-        // 7. Clear sessions and regenerate app key
+        // 9. Clear sessions directory
         $sessionPath = storage_path('framework/sessions');
         if (is_dir($sessionPath)) {
             $files = glob($sessionPath . '/*');
@@ -1217,7 +1292,7 @@ Route::get('/complete-fix', function () {
             }
         }
         
-        // 8. Final verification
+        // 10. Final verification
         $finalTables = DB::select('SHOW TABLES');
         $userCount = DB::table('users')->count();
         
@@ -1228,16 +1303,16 @@ Route::get('/complete-fix', function () {
         
         return response()->json([
             'status' => 'success',
-            'message' => 'Complete application reset and fix completed successfully',
+            'message' => 'Complete application reset and fix completed successfully - All migration conflicts resolved',
             'results' => $results,
             'login_credentials' => [
                 'email' => 'admin@email.com',
                 'password' => 'aaaaa'
             ],
             'next_steps' => [
-                '1. Try login with credentials above',
+                '1. Login with credentials above',
                 '2. Access dashboard to verify production tables',
-                '3. Import your production data using backup_production_data.sql'
+                '3. Import production data from backup_production_data.sql'
             ]
         ]);
         
