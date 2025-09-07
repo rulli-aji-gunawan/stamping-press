@@ -16,6 +16,15 @@ use App\Http\Controllers\TableProductionController;
 use App\Http\Controllers\DowntimeCategoryController;
 use App\Http\Controllers\DowntimeClassificationController;
 
+// Health check endpoint for Railway
+Route::get('/health', function () {
+    return response()->json([
+        'status' => 'ok',
+        'timestamp' => now(),
+        'app' => config('app.name', 'StampingPress')
+    ]);
+});
+
 Route::get('/test-db', function () {
     try {
         DB::connection()->getPdo();
