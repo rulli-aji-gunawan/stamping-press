@@ -1324,3 +1324,185 @@ Route::get('/complete-fix', function () {
         ]);
     }
 });
+
+// Debug dashboard error specifically
+Route::get('/debug-dashboard-error', function () {
+    try {
+        $results = [];
+        
+        // 1. Check if tables exist and have correct structure
+        $tables = ['table_productions', 'table_downtimes', 'table_defects'];
+        foreach ($tables as $table) {
+            try {
+                $exists = DB::select("SHOW TABLES LIKE '{$table}'");
+                if ($exists) {
+                    $columns = DB::select("DESCRIBE {$table}");
+                    $results['tables'][$table] = [
+                        'exists' => true,
+                        'columns' => array_map(function($col) { return $col->Field; }, $columns),
+                        'row_count' => DB::table($table)->count()
+                    ];
+                } else {
+                    $results['tables'][$table] = ['exists' => false];
+                }
+            } catch (\Exception $e) {
+                $results['tables'][$table] = [
+                    'exists' => false,
+                    'error' => $e->getMessage()
+                ];
+            }
+        }
+        
+        // 2. Test individual queries from DashboardController
+        try {
+            // Test TableDowntime query
+            $nonProductiveTest = DB::table('table_downtimes')
+                ->where(function ($query) {
+                    $query->where('downtime_type', 'Non Productive Time')
+                        ->orWhere('dt_category', 'trial');
+                })
+                ->select(
+                    'fy_n',
+                    'model', 
+                    'item_name',
+                    'date',
+                    'shift',
+                    'line',
+                    'group',
+                    DB::raw('SUM(total_time) as total_non_productive_downtime')
+                )
+                ->groupBy('fy_n', 'date', 'shift', 'model', 'item_name', 'line', 'group')
+                ->limit(5)
+                ->get();
+            
+            $results['queries']['non_productive_time'] = [
+                'status' => 'success',
+                'count' => count($nonProductiveTest),
+                'sample' => $nonProductiveTest->take(2)
+            ];
+        } catch (\Exception $e) {
+            $results['queries']['non_productive_time'] = [
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ];
+        }
+        
+        try {
+            // Test TableDefect query
+            $defectTest = DB::table('table_defects')
+                ->select(
+                    'fy_n',
+                    'model',
+                    'item_name', 
+                    'date',
+                    'shift',
+                    'line',
+                    'group',
+                    'defect_category',
+                    'defect_name',
+                    DB::raw('SUM(COALESCE(defect_qty_a, 0) + COALESCE(defect_qty_b, 0)) as total_defect')
+                )
+                ->whereNotNull('defect_category')
+                ->groupBy('fy_n', 'model', 'item_name', 'date', 'shift', 'line', 'group', 'defect_category', 'defect_name')
+                ->limit(5)
+                ->get();
+            
+            $results['queries']['defect_data'] = [
+                'status' => 'success', 
+                'count' => count($defectTest),
+                'sample' => $defectTest->take(2)
+            ];
+        } catch (\Exception $e) {
+            $results['queries']['defect_data'] = [
+                'status' => 'error',
+                'message' => $e->getMessage()
+            ];
+        }
+        
+        try {
+            // Test TableProduction query
+            $productionTest = DB::table('table_productions')
+                ->select(
+                    'fy_n',
+                    'model',
+                    'item_name',
+                    'date', 
+                    'shift',
+                    'line',
+                    'group',
+                    'ok_a',
+                    'ok_b',
+                    'plan_a',
+                    'plan_b'
+                )
+                ->limit(5)
+                ->get();
+            
+            $results['queries']['production_data'] = [
+                'status' => 'success',
+                'count' => count($productionTest),
+                'sample' => $productionTest->take(2)
+            ];
+        } catch (\Exception $e) {
+            $results['queries']['production_data'] = [
+                'status' => 'error', 
+                'message' => $e->getMessage()
+            ];
+        }
+        
+        // 3. Test if DashboardController can be instantiated
+        try {
+            $controller = new \App\Http\Controllers\DashboardController();
+            $results['controller'] = [
+                'instantiated' => true,
+                'class' => get_class($controller)
+            ];
+        } catch (\Exception $e) {
+            $results['controller'] = [
+                'instantiated' => false,
+                'error' => $e->getMessage()
+            ];
+        }
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Dashboard error diagnosis completed',
+            'results' => $results
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+    }
+});
+
+// Simple dashboard test without complex queries
+Route::get('/simple-dashboard-test', function () {
+    try {
+        // Test basic data access
+        $tableProductions = DB::table('table_productions')->count();
+        $tableDowntimes = DB::table('table_downtimes')->count(); 
+        $tableDefects = DB::table('table_defects')->count();
+        
+        return response()->json([
+            'status' => 'success',
+            'message' => 'Simple dashboard test passed',
+            'data' => [
+                'table_productions_count' => $tableProductions,
+                'table_downtimes_count' => $tableDowntimes,
+                'table_defects_count' => $tableDefects,
+                'auth_user' => auth()->user() ? auth()->user()->email : 'not logged in'
+            ]
+        ]);
+        
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+    }
+});
