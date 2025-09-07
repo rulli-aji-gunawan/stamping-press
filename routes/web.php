@@ -16,12 +16,17 @@ use App\Http\Controllers\TableProductionController;
 use App\Http\Controllers\DowntimeCategoryController;
 use App\Http\Controllers\DowntimeClassificationController;
 
+// Ultra simple health check
+Route::get('/up', function () {
+    return 'OK';
+});
+
 // Health check endpoint for Railway
 Route::get('/health', function () {
     try {
         // Test database connection
         DB::connection()->getPdo();
-        
+
         return response()->json([
             'status' => 'ok',
             'timestamp' => now(),
