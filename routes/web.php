@@ -457,18 +457,18 @@ Route::get('/check-migrations', function () {
     try {
         // Get all migrations that have been run
         $migrationsRun = DB::table('migrations')->pluck('migration')->toArray();
-        
+
         // Get all migration files - simplified approach
         $migrationFiles = [
             '0001_01_01_000000_create_users_table',
             '2025_05_04_213826_create_table_productions_table',
-            '2025_06_30_061935_create_table_downtimes_table', 
+            '2025_06_30_061935_create_table_downtimes_table',
             '2025_07_15_055100_create_table_defects_table'
         ];
-        
+
         // Find missing migrations
         $missingMigrations = array_diff($migrationFiles, $migrationsRun);
-        
+
         // Check specific tables
         $tableChecks = [];
         $tables = ['table_productions', 'table_downtimes', 'table_defects'];
@@ -480,7 +480,7 @@ Route::get('/check-migrations', function () {
                 $tableChecks[$table] = 'missing';
             }
         }
-        
+
         return response()->json([
             'status' => 'success',
             'total_migrations_run' => count($migrationsRun),
@@ -501,7 +501,7 @@ Route::get('/migrate-production-tables', function () {
     try {
         // Use Artisan directly instead of shell_exec
         $output = [];
-        
+
         // Check current table status first
         $beforeStatus = [];
         $tables = ['table_productions', 'table_downtimes', 'table_defects'];
@@ -513,11 +513,11 @@ Route::get('/migrate-production-tables', function () {
                 $beforeStatus[$table] = 'error';
             }
         }
-        
+
         // Run migration
         Artisan::call('migrate', ['--force' => true]);
         $migrationOutput = Artisan::output();
-        
+
         // Check tables after migration
         $afterStatus = [];
         foreach ($tables as $table) {
@@ -528,12 +528,59 @@ Route::get('/migrate-production-tables', function () {
                 $afterStatus[$table] = 'error: ' . $e->getMessage();
             }
         }
-        
+
         return response()->json([
             'status' => 'success',
             'before_migration' => $beforeStatus,
             'migration_output' => $migrationOutput,
             'after_migration' => $afterStatus
+        ]);
+    } catch (\Exception $e) {
+        return response()->json([
+            'status' => 'error',
+            'message' => $e->getMessage(),
+            'trace' => $e->getTraceAsString()
+        ]);
+    }
+});
+
+// Fix migration conflicts - mark problematic migrations as run
+Route::get('/fix-migration-conflicts', function () {
+    try {
+        // List of migrations that have conflicts but tables exist
+        $conflictMigrations = [
+            '2025_05_04_213826_create_table_productions_table',
+            '2025_06_30_061935_create_table_downtimes_table',
+            '2025_07_15_055100_create_table_defects_table'
+        ];
+
+        $results = [];
+
+        foreach ($conflictMigrations as $migration) {
+            // Check if migration already recorded
+            $exists = DB::table('migrations')->where('migration', $migration)->exists();
+
+            if (!$exists) {
+                // Insert migration record without running it
+                DB::table('migrations')->insert([
+                    'migration' => $migration,
+                    'batch' => DB::table('migrations')->max('batch') + 1
+                ]);
+                $results[$migration] = 'marked_as_run';
+            } else {
+                $results[$migration] = 'already_recorded';
+            }
+        }
+
+        // Now try a safe migration
+        Artisan::call('migrate', ['--force' => true]);
+        $migrationOutput = Artisan::output();
+
+        return response()->json([
+            'status' => 'success',
+            'conflict_fixes' => $results,
+            'migration_output' => $migrationOutput,
+            'message' => 'Migration conflicts resolved'
         ]);
     } catch (\Exception $e) {
         return response()->json([
