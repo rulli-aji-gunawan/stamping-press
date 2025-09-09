@@ -1057,14 +1057,14 @@ Route::get('/generate-sql-export', function () {
 Route::get('/complete-fix', function () {
     try {
         $results = [];
-        
+
         // 1. Clear all caches first
         Artisan::call('cache:clear');
         Artisan::call('config:clear');
         Artisan::call('route:clear');
         Artisan::call('view:clear');
         $results['caches_cleared'] = true;
-        
+
         // 2. Reset database completely - drop all tables
         $tables = DB::select('SHOW TABLES');
         $tableNames = [];
@@ -1072,14 +1072,14 @@ Route::get('/complete-fix', function () {
             $tableName = array_values((array) $table)[0];
             $tableNames[] = $tableName;
         }
-        
+
         DB::statement('SET FOREIGN_KEY_CHECKS = 0');
         foreach ($tableNames as $tableName) {
             DB::statement("DROP TABLE IF EXISTS `{$tableName}`");
         }
         DB::statement('SET FOREIGN_KEY_CHECKS = 1');
         $results['all_tables_dropped'] = $tableNames;
-        
+
         // 3. Create migrations table manually
         DB::statement("
             CREATE TABLE `migrations` (
@@ -1089,14 +1089,14 @@ Route::get('/complete-fix', function () {
                 PRIMARY KEY (`id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ");
-        
+
         // 4. Run only essential migrations to avoid conflicts
         $essentialMigrations = [
             '0001_01_01_000000_create_users_table',
-            '0001_01_01_000001_create_cache_table', 
+            '0001_01_01_000001_create_cache_table',
             '0001_01_01_000002_create_jobs_table'
         ];
-        
+
         foreach ($essentialMigrations as $migration) {
             try {
                 Artisan::call('migrate:refresh', [
@@ -1108,15 +1108,15 @@ Route::get('/complete-fix', function () {
                 $results['migration_warnings'][] = $migration . ': ' . $e->getMessage();
             }
         }
-        
+
         // 5. Create admin user manually
         DB::statement("
             INSERT INTO `users` (`name`, `email`, `email_verified_at`, `password`, `remember_token`, `created_at`, `updated_at`) 
             VALUES ('Admin User', 'admin@email.com', NULL, ?, NULL, NOW(), NOW())
         ", [Hash::make('aaaaa')]);
-        
+
         $results['admin_user_created'] = true;
-        
+
         // 6. Create production tables manually with correct structure
         DB::statement("
             CREATE TABLE `table_productions` (
@@ -1153,7 +1153,7 @@ Route::get('/complete-fix', function () {
                 PRIMARY KEY (`id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ");
-        
+
         DB::statement("
             CREATE TABLE `table_downtimes` (
                 `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -1188,7 +1188,7 @@ Route::get('/complete-fix', function () {
                 CONSTRAINT `table_downtimes_table_production_id_foreign` FOREIGN KEY (`table_production_id`) REFERENCES `table_productions` (`id`) ON DELETE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ");
-        
+
         DB::statement("
             CREATE TABLE `table_defects` (
                 `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -1215,7 +1215,7 @@ Route::get('/complete-fix', function () {
                 CONSTRAINT `table_defects_table_production_id_foreign` FOREIGN KEY (`table_production_id`) REFERENCES `table_productions` (`id`) ON DELETE CASCADE
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ");
-        
+
         // 7. Create other essential tables
         DB::statement("
             CREATE TABLE `model_items` (
@@ -1227,7 +1227,7 @@ Route::get('/complete-fix', function () {
                 PRIMARY KEY (`id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ");
-        
+
         DB::statement("
             CREATE TABLE `process_names` (
                 `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -1237,7 +1237,7 @@ Route::get('/complete-fix', function () {
                 PRIMARY KEY (`id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ");
-        
+
         DB::statement("
             CREATE TABLE `downtime_categories` (
                 `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -1247,7 +1247,7 @@ Route::get('/complete-fix', function () {
                 PRIMARY KEY (`id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ");
-        
+
         DB::statement("
             CREATE TABLE `downtime_classifications` (
                 `id` bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -1257,9 +1257,9 @@ Route::get('/complete-fix', function () {
                 PRIMARY KEY (`id`)
             ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
         ");
-        
+
         $results['production_tables_created'] = true;
-        
+
         // 8. Mark all migrations as completed to prevent future conflicts
         $allMigrations = [
             '0001_01_01_000000_create_users_table',
@@ -1273,14 +1273,14 @@ Route::get('/complete-fix', function () {
             '2024_08_18_223311_create_downtime_categories_table',
             '2025_03_14_060117_create_downtime_classifications_table'
         ];
-        
+
         foreach ($allMigrations as $migration) {
             DB::table('migrations')->insert([
                 'migration' => $migration,
                 'batch' => 1
             ]);
         }
-        
+
         // 9. Clear sessions directory
         $sessionPath = storage_path('framework/sessions');
         if (is_dir($sessionPath)) {
@@ -1291,16 +1291,16 @@ Route::get('/complete-fix', function () {
                 }
             }
         }
-        
+
         // 10. Final verification
         $finalTables = DB::select('SHOW TABLES');
         $userCount = DB::table('users')->count();
-        
-        $results['final_tables'] = array_map(function($table) {
+
+        $results['final_tables'] = array_map(function ($table) {
             return array_values((array) $table)[0];
         }, $finalTables);
         $results['user_count'] = $userCount;
-        
+
         return response()->json([
             'status' => 'success',
             'message' => 'Complete application reset and fix completed successfully - All migration conflicts resolved',
@@ -1315,7 +1315,6 @@ Route::get('/complete-fix', function () {
                 '3. Import production data from backup_production_data.sql'
             ]
         ]);
-        
     } catch (\Exception $e) {
         return response()->json([
             'status' => 'error',
@@ -1329,7 +1328,7 @@ Route::get('/complete-fix', function () {
 Route::get('/debug-dashboard-error', function () {
     try {
         $results = [];
-        
+
         // 1. Check if tables exist and have correct structure
         $tables = ['table_productions', 'table_downtimes', 'table_defects'];
         foreach ($tables as $table) {
@@ -1339,7 +1338,9 @@ Route::get('/debug-dashboard-error', function () {
                     $columns = DB::select("DESCRIBE {$table}");
                     $results['tables'][$table] = [
                         'exists' => true,
-                        'columns' => array_map(function($col) { return $col->Field; }, $columns),
+                        'columns' => array_map(function ($col) {
+                            return $col->Field;
+                        }, $columns),
                         'row_count' => DB::table($table)->count()
                     ];
                 } else {
@@ -1352,7 +1353,7 @@ Route::get('/debug-dashboard-error', function () {
                 ];
             }
         }
-        
+
         // 2. Test individual queries from DashboardController
         try {
             // Test TableDowntime query
@@ -1363,7 +1364,7 @@ Route::get('/debug-dashboard-error', function () {
                 })
                 ->select(
                     'fy_n',
-                    'model', 
+                    'model',
                     'item_name',
                     'date',
                     'shift',
@@ -1374,7 +1375,7 @@ Route::get('/debug-dashboard-error', function () {
                 ->groupBy('fy_n', 'date', 'shift', 'model', 'item_name', 'line', 'group')
                 ->limit(5)
                 ->get();
-            
+
             $results['queries']['non_productive_time'] = [
                 'status' => 'success',
                 'count' => count($nonProductiveTest),
@@ -1386,14 +1387,14 @@ Route::get('/debug-dashboard-error', function () {
                 'message' => $e->getMessage()
             ];
         }
-        
+
         try {
             // Test TableDefect query
             $defectTest = DB::table('table_defects')
                 ->select(
                     'fy_n',
                     'model',
-                    'item_name', 
+                    'item_name',
                     'date',
                     'shift',
                     'line',
@@ -1406,9 +1407,9 @@ Route::get('/debug-dashboard-error', function () {
                 ->groupBy('fy_n', 'model', 'item_name', 'date', 'shift', 'line', 'group', 'defect_category', 'defect_name')
                 ->limit(5)
                 ->get();
-            
+
             $results['queries']['defect_data'] = [
-                'status' => 'success', 
+                'status' => 'success',
                 'count' => count($defectTest),
                 'sample' => $defectTest->take(2)
             ];
@@ -1418,7 +1419,7 @@ Route::get('/debug-dashboard-error', function () {
                 'message' => $e->getMessage()
             ];
         }
-        
+
         try {
             // Test TableProduction query
             $productionTest = DB::table('table_productions')
@@ -1426,7 +1427,7 @@ Route::get('/debug-dashboard-error', function () {
                     'fy_n',
                     'model',
                     'item_name',
-                    'date', 
+                    'date',
                     'shift',
                     'line',
                     'group',
@@ -1437,7 +1438,7 @@ Route::get('/debug-dashboard-error', function () {
                 )
                 ->limit(5)
                 ->get();
-            
+
             $results['queries']['production_data'] = [
                 'status' => 'success',
                 'count' => count($productionTest),
@@ -1445,11 +1446,11 @@ Route::get('/debug-dashboard-error', function () {
             ];
         } catch (\Exception $e) {
             $results['queries']['production_data'] = [
-                'status' => 'error', 
+                'status' => 'error',
                 'message' => $e->getMessage()
             ];
         }
-        
+
         // 3. Test if DashboardController can be instantiated
         try {
             $controller = new \App\Http\Controllers\DashboardController();
@@ -1463,13 +1464,12 @@ Route::get('/debug-dashboard-error', function () {
                 'error' => $e->getMessage()
             ];
         }
-        
+
         return response()->json([
             'status' => 'success',
             'message' => 'Dashboard error diagnosis completed',
             'results' => $results
         ]);
-        
     } catch (\Exception $e) {
         return response()->json([
             'status' => 'error',
@@ -1484,9 +1484,9 @@ Route::get('/simple-dashboard-test', function () {
     try {
         // Test basic data access
         $tableProductions = DB::table('table_productions')->count();
-        $tableDowntimes = DB::table('table_downtimes')->count(); 
+        $tableDowntimes = DB::table('table_downtimes')->count();
         $tableDefects = DB::table('table_defects')->count();
-        
+
         return response()->json([
             'status' => 'success',
             'message' => 'Simple dashboard test passed',
@@ -1497,7 +1497,6 @@ Route::get('/simple-dashboard-test', function () {
                 'auth_user' => auth()->user() ? auth()->user()->email : 'not logged in'
             ]
         ]);
-        
     } catch (\Exception $e) {
         return response()->json([
             'status' => 'error',
