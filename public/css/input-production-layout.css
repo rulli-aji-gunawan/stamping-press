@@ -61,7 +61,7 @@
     border-collapse: collapse;
     margin-bottom: 36px;
     /* hanya untuk check border*/
-    /* border: 1px solid var(--color_Green1); */
+    border: 1px solid var(--color_Green1);
 }
 
 #tbl-form-input-data-production th,
@@ -69,7 +69,7 @@
     padding: 4px;
     width: 120px;
     /* hanya untuk check border*/
-    /* border: 1px solid var(--color_LightRed); */
+    border: 1px solid var(--color_LightRed);
 }
 
 #tbl-form-input-data-production th {
