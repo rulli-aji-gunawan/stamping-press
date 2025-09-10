@@ -129,7 +129,7 @@
                         </tr>
                         <tr>
                             <th><label for="item_name" class="td-right-gen">Item Name :</label></th>
-                            <td colspan="3" class="items">
+                            <td colspan="2" class="items">
                                 <select name="item_name" id="item_name" required>
                                     <option value="">MODEL-PNL,ITEM NAME</option>
                                 </select>

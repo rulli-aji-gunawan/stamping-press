@@ -11,9 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('production_problems', function (Blueprint $table) {
-            $table->string('dt_classification')->after('dt_category');
-        });
+        // Check if column doesn't exist before adding
+        if (!Schema::hasColumn('production_problems', 'dt_classification')) {
+            Schema::table('production_problems', function (Blueprint $table) {
+                $table->string('dt_classification')->after('dt_category');
+            });
+        }
     }
 
     /**

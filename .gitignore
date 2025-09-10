@@ -18,3 +18,16 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+
+# Custom additions
+/PHP/
+/heroku-cli/
+/mysql/
+*.zip
+*.tar.gz
+/bootstrap/cache/
+/database/migrations_backup/
+backup_production_data.sql
+extract_inserts.ps1
+/storage/logs/
+*.log
