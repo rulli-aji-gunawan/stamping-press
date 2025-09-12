@@ -95,8 +95,9 @@ class ProductionController extends Controller
                 'production_problems.*.counter_measure' => 'required|string',
                 'production_problems.*.pic' => 'required|string',
                 'production_problems.*.status' => 'required|string',
-                'production_problems.*.problem_picture_data' => 'nullable|string',
-                'production_problems.*.problem_picture_name' => 'nullable|string',
+                'production_problems.*.problem_picture_data' => 'nullable|string|max:7340032', // ~5MB base64
+                'production_problems.*.problem_picture_name' => 'nullable|string|max:255',
+                'problem_pictures.*' => 'nullable|image|mimes:jpeg,jpg,png,gif|max:5120', // 5MB
             ]);
 
             Log::info('Validation passed', ['validatedData' => $validatedData]);
@@ -181,47 +182,97 @@ class ProductionController extends Controller
 
                     // Cek apakah ada data gambar base64
                     if (isset($problem['problem_picture_data']) && !empty($problem['problem_picture_data'])) {
-                        // Ekstrak data gambar dari string base64
-                        $base64Image = $problem['problem_picture_data'];
-                        list($type, $data) = explode(';', $base64Image);
-                        list(, $data) = explode(',', $data);
-                        $imageData = base64_decode($data);
+                        try {
+                            // Ekstrak data gambar dari string base64
+                            $base64Image = $problem['problem_picture_data'];
+                            
+                            // Validasi format base64
+                            if (!preg_match('/^data:image\/(jpeg|jpg|png|gif);base64,/', $base64Image)) {
+                                throw new \Exception("Invalid base64 image format");
+                            }
+                            
+                            list($type, $data) = explode(';', $base64Image);
+                            list(, $data) = explode(',', $data);
+                            $imageData = base64_decode($data);
+                            
+                            if ($imageData === false) {
+                                throw new \Exception("Failed to decode base64 image");
+                            }
+                            
+                            // Validasi ukuran data (max 5MB)
+                            if (strlen($imageData) > 5242880) {
+                                throw new \Exception("Image size too large. Maximum 5MB allowed.");
+                            }
 
-                        // Dapatkan ekstensi file
-                        $extension = 'jpg'; // Default
-                        if (isset($problem['problem_picture_name'])) {
-                            $originalName = $problem['problem_picture_name'];
-                            $extension = pathinfo($originalName, PATHINFO_EXTENSION) ?: 'jpg';
+                            // Dapatkan ekstensi file
+                            $extension = 'jpg'; // Default
+                            if (isset($problem['problem_picture_name'])) {
+                                $originalName = basename($problem['problem_picture_name']); // Sanitasi nama file
+                                $ext = pathinfo($originalName, PATHINFO_EXTENSION);
+                                $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+                                if ($ext && in_array(strtolower($ext), $allowedExtensions)) {
+                                    $extension = strtolower($ext);
+                                }
+                            }
+
+                            // Buat nama file unik
+                            $filename = 'problem_picture_' . str_pad($dataProduction->id, 7, '0', STR_PAD_LEFT) . '_' . ($index + 1) . '.' . $extension;
+
+                            // Simpan file
+                            $path = public_path('images/problems');
+                            if (!file_exists($path)) {
+                                if (!mkdir($path, 0755, true)) {
+                                    throw new \Exception("Failed to create upload directory.");
+                                }
+                            }
+                            
+                            if (file_put_contents($path . '/' . $filename, $imageData) === false) {
+                                throw new \Exception("Failed to save image file.");
+                            }
+
+                            // Simpan nama file ke database
+                            $problemData['problem_picture'] = 'images/problems/' . $filename;
+
+                            // Hapus data base64 dan nama file asli dari data yang akan disimpan ke database
+                            unset($problemData['problem_picture_data']);
+                            unset($problemData['problem_picture_name']);
+                            
+                        } catch (\Exception $e) {
+                            Log::error('Base64 image processing failed', [
+                                'error' => $e->getMessage(),
+                                'index' => $index
+                            ]);
+                            throw new \Exception("Image upload failed: " . $e->getMessage());
                         }
-
-                        // Buat nama file unik
-                        $filename = 'problem_picture_' . str_pad($dataProduction->id, 7, '0', STR_PAD_LEFT) . '_' . ($index + 1) . '.' . $extension;
-
-                        // Simpan file
-                        $path = public_path('images/problems');
-                        if (!file_exists($path)) {
-                            mkdir($path, 0777, true);
-                        }
-                        file_put_contents($path . '/' . $filename, $imageData);
-
-                        // Simpan nama file ke database
-                        $problemData['problem_picture'] = 'images/problems/' . $filename;
-
-                        // Hapus data base64 dan nama file asli dari data yang akan disimpan ke database
-                        unset($problemData['problem_picture_data']);
-                        unset($problemData['problem_picture_name']);
                     }
                     // Cek apakah menggunakan metode tradisional file upload
                     else if ($request->hasFile('problem_pictures') && isset($request->file('problem_pictures')[$index])) {
                         $file = $request->file('problem_pictures')[$index];
-                        if ($file) {
-                            $filename = 'problem_picture_' . str_pad($dataProduction->id, 7, '0', STR_PAD_LEFT) . '_' . ($index + 1) . '.' . $file->getClientOriginalExtension();
-                            $file->move(public_path('images/problems'), $filename);
-
-                            // Ubah ini:
-                            $problemData['problem_picture'] = $filename;
-
-                            // Menjadi:
+                        if ($file && $file->isValid()) {
+                            // Validasi tipe file
+                            $allowedExtensions = ['jpg', 'jpeg', 'png', 'gif'];
+                            $extension = strtolower($file->getClientOriginalExtension());
+                            
+                            if (!in_array($extension, $allowedExtensions)) {
+                                throw new \Exception("File type not allowed. Only jpg, jpeg, png, gif are allowed.");
+                            }
+                            
+                            // Validasi ukuran file (max 5MB)
+                            if ($file->getSize() > 5242880) {
+                                throw new \Exception("File size too large. Maximum 5MB allowed.");
+                            }
+                            
+                            $filename = 'problem_picture_' . str_pad($dataProduction->id, 7, '0', STR_PAD_LEFT) . '_' . ($index + 1) . '.' . $extension;
+                            
+                            // Pastikan direktori ada
+                            $uploadPath = public_path('images/problems');
+                            if (!file_exists($uploadPath)) {
+                                if (!mkdir($uploadPath, 0755, true)) {
+                                    throw new \Exception("Failed to create upload directory.");
+                                }
+                            }
+                            
+                            $file->move($uploadPath, $filename);
                             $problemData['problem_picture'] = 'images/problems/' . $filename;
                         }
                     }

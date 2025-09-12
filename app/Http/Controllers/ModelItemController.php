@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\ModelItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 
 class ModelItemController extends Controller
 {
@@ -45,17 +46,42 @@ class ModelItemController extends Controller
 
         // Proses upload gambar
         if ($request->hasFile('product_picture')) {
-            $ext = $request->file('product_picture')->getClientOriginalExtension();
-            $filename = $model_item->id . '.' .
-                $model_item->model_code . '.' .
-                $model_item->model_year . '.' .
-                $model_item->item_name . '.' . $ext;
+            try {
+                $ext = $request->file('product_picture')->getClientOriginalExtension();
+                $filename = $model_item->id . '.' .
+                    $model_item->model_code . '.' .
+                    $model_item->model_year . '.' .
+                    $model_item->item_name . '.' . $ext;
 
-            $request->file('product_picture')->move(public_path('images/products'), $filename);
+                // Pastikan direktori ada
+                $uploadPath = public_path('images/products');
+                if (!file_exists($uploadPath)) {
+                    if (!mkdir($uploadPath, 0755, true)) {
+                        throw new \Exception("Failed to create upload directory.");
+                    }
+                }
 
-            // Simpan nama file ke kolom product_picture
-            $model_item->product_picture = $filename;
-            $model_item->save();
+                // Gunakan file_put_contents yang terbukti bekerja di Windows
+                $targetPath = $uploadPath . DIRECTORY_SEPARATOR . $filename;
+                $fileContent = $request->file('product_picture')->get();
+                
+                if (file_put_contents($targetPath, $fileContent) === false) {
+                    throw new \Exception("Failed to save uploaded file.");
+                }
+
+                // Simpan nama file ke kolom product_picture
+                $model_item->product_picture = $filename;
+                $model_item->save();
+            } catch (\Exception $e) {
+                // Log error dan hapus model item yang sudah dibuat
+                \Log::error('Image upload failed', [
+                    'error' => $e->getMessage(),
+                    'model_item_id' => $model_item->id
+                ]);
+                
+                $model_item->delete();
+                return redirect('/master-data/model-items')->with('error', 'Failed to upload image: ' . $e->getMessage());
+            }
         }
 
         return redirect('/master-data/model-items')->with('success', 'New Model and Item added successfully');
@@ -104,13 +130,40 @@ class ModelItemController extends Controller
 
         // Jika ada file baru, upload dan update nama file
         if ($request->hasFile('product_picture')) {
-            $ext = $request->file('product_picture')->getClientOriginalExtension();
-            $filename = $model_item->id . '.' .
-                $model_item->model_code . '.' .
-                $model_item->model_year . '.' .
-                $model_item->item_name . '.' . $ext;
-            $request->file('product_picture')->move(public_path('images/products'), $filename);
-            $model_item->product_picture = $filename;
+            try {
+                $ext = $request->file('product_picture')->getClientOriginalExtension();
+                $filename = $model_item->id . '.' .
+                    $model_item->model_code . '.' .
+                    $model_item->model_year . '.' .
+                    $model_item->item_name . '.' . $ext;
+
+                // Pastikan direktori ada
+                $uploadPath = public_path('images/products');
+                if (!file_exists($uploadPath)) {
+                    if (!mkdir($uploadPath, 0755, true)) {
+                        throw new \Exception("Failed to create upload directory.");
+                    }
+                }
+
+                // Gunakan file_put_contents yang terbukti bekerja di Windows
+                $targetPath = $uploadPath . DIRECTORY_SEPARATOR . $filename;
+                $fileContent = $request->file('product_picture')->get();
+                
+                if (file_put_contents($targetPath, $fileContent) === false) {
+                    throw new \Exception("Failed to save uploaded file.");
+                }
+                
+                $model_item->product_picture = $filename;
+            } catch (\Exception $e) {
+                \Log::error('Image upload failed during update', [
+                    'error' => $e->getMessage(),
+                    'model_item_id' => $model_item->id
+                ]);
+                
+                return response()->json([
+                    'error' => 'Failed to upload image: ' . $e->getMessage()
+                ], 500);
+            }
         }
 
         $model_item->save();
