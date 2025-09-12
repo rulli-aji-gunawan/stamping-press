@@ -74,9 +74,9 @@
                     <i class='bx bxs-chevron-down'></i>
                 </div>
                 <div class="submenu">
-                    <a href="/input-report" class="submenu-title">Input Report</a>
+                    <a href="#" class="submenu-title">Input Report</a>
                     <a href="/input-report/production" class="link">Production</a>
-                    <a href="#" class="link">Tooling</a>
+                    <a href="#" class="link tooling-disabled">Tooling</a>
                 </div>
             </li>
 
@@ -94,7 +94,7 @@
                     <a href="{{ route('table_production') }}" class="link">Tabel Production</a>
                     <a href="{{ route('table_downtime') }}" class="link">Tabel Downtime</a>
                     <a href="{{ route('table_defect') }}" class="link">Tabel Defect</a>
-                    <a href="#" class="link">Tabel Tooling</a>
+                    <a href="#" class="link tooling-disabled">Tabel Tooling</a>
                 </div>
             </li>
 
@@ -115,8 +115,7 @@
                     <a href="{{ route('process') }}" class="link">Process Name</a>
                     <a href="{{ route('downtime_categories') }}" class="link">DT Category</a>
                     <a href="{{ route('dt_classifications') }}" class="link">DT Classification</a>
-
-                    <a href="#" class="link">Defects Category</a>
+                    <a href="#" class="link tooling-disabled">Defects Category</a>
                 </div>
             </li>
         </ul>

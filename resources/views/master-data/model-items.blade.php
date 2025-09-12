@@ -11,7 +11,7 @@
 
         {{-- Add model button --}}
         <div class="btn-model">
-            <button id="btn-addMasterData" onclick="openForm()">Add New Model</button>
+            <button id="btn-addMasterData" onclick="openForm()">Add</button>
         </div>
 
         {{-- Table of User --}}
@@ -87,7 +87,7 @@
 
         {{-- Add model button --}}
         <div class="btn-model">
-            <button id="btn-addMasterData" onclick="openForm()">Add New Model</button>
+            <button id="btn-addMasterData" onclick="openForm()">Add</button>
         </div>
 
     </div>

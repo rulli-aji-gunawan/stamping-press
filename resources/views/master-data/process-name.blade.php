@@ -11,7 +11,7 @@
 
         {{-- Add Process Name button --}}
         <div class="btn-model">
-            <button id="btn-addMasterData" onclick="openForm()">Add Process</button>
+            <button id="btn-addMasterData" onclick="openForm()">Add</button>
         </div>
 
         {{-- Table of Process Name --}}
@@ -67,7 +67,7 @@
 
         {{-- Add Process Name button --}}
         <div class="btn-model">
-            <button id="btn-addMasterData" onclick="openForm()">Add Process</button>
+            <button id="btn-addMasterData" onclick="openForm()">Add</button>
         </div>
 
     </div>

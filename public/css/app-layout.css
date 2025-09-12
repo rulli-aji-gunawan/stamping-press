@@ -268,6 +268,18 @@ header form:hover,
     /* font-weight: 500; */
 }
 
+/* Tooling links - disabled style */
+.submenu .link.tooling-disabled {
+    text-decoration: line-through !important;
+    color: var(--color_Light2) !important;
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.submenu .link.tooling-disabled:hover {
+    color: var(--color_Light2) !important;
+}
+
 .submenu-title {
     display: none;
 }
@@ -333,6 +345,7 @@ header form:hover,
     font-style: 16px;
     color: yellow;
 }
+
 
 /* =============== Home Section =============== */
 .home {
